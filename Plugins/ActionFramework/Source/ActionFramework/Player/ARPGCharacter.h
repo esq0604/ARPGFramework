@@ -18,6 +18,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 class UAbilitySystemComponent;
+class UAttributeSet;
 UCLASS()
 class ACTIONFRAMEWORK_API AARPGCharacter : public ACharacter ,public IAbilitySystemInterface , public ICombatable, public IGameplayTagAssetInterface
 {
@@ -36,11 +37,16 @@ protected:
 
 	virtual void PossessedBy(AController* NewController) override;
 
+	//virtual void OnRep_PlayerState() override;
+
 	virtual void Tick(float DeltaSeconds) override;
+
+private:
+	void InitAbilityActorInfo();
 
 public:
 	/** Returns CameraBoom subobject **/
-	FORCEINLINE class UARPGSpringArmComponent* GetSpringArmComp() const { return SpringArmComp; }
+	FORCEINLINE class UARPGSpringArmComponent* GetSpringArmComp() const { return TargetingCameraSpringArm; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
@@ -50,18 +56,20 @@ public:
 
 protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "ARPGCharacter")
-	TObjectPtr<UARPGSpringArmComponent> SpringArmComp;
+	TObjectPtr<UARPGSpringArmComponent> TargetingCameraSpringArm;
 
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "ARPGCharacter")
 	TObjectPtr<UCameraComponent> FollowCamera;
 private:
-
-
 	UPROPERTY(EditDefaultsOnly, Category = "ARPGCharacter")
 	TObjectPtr<UHitReactionComponent> HitReactionComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "ARPGCharacter")
 	TObjectPtr<UInventoryComponent> InventoryComponent;
 
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+
+
+	TObjectPtr<UAttributeSet> AttributeSet;
 };

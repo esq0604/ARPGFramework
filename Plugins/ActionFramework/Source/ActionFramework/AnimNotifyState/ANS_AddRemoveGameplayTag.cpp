@@ -35,7 +35,7 @@ void UANS_AddRemoveGameplayTag::NotifyEnd(USkeletalMeshComponent* MeshComp, UAni
 
 		if (ASC)
 		{
-			//ASC->RemoveLooseGameplayTag(Tag);
+			ASC->RemoveLooseGameplayTag(Tag);
 		}
 	}
 }

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "ARPGUserWidget.h"
 #include "ItemDescriptionPanel.generated.h"
 
 /**
@@ -38,7 +38,7 @@ struct FDescriptionInfo
 };
 
 UCLASS()
-class ACTIONFRAMEWORK_API UItemDescriptionPanel : public UUserWidget
+class ACTIONFRAMEWORK_API UItemDescriptionPanel : public UARPGUserWidget
 {
 	GENERATED_BODY()
 

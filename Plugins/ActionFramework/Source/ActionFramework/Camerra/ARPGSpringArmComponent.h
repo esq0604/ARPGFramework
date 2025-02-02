@@ -72,13 +72,13 @@ private:
 	/* The component the camera is currently locked on to */
 
 	UPROPERTY(EditDefaultsOnly, Category = "Lock On Camera")
-	TObjectPtr<UCurveFloat> SpringArmZOffset;
+	TObjectPtr<UCurveFloat> SpringArmZOffsetByTargetDist;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Lock On Camera")
-	TObjectPtr<UCurveFloat> SpringArmLenght;
+	TObjectPtr<UCurveFloat> SpringArmLenghtByTargetDist;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Lock On Camera")
-	TObjectPtr<UCurveFloat> CameraRotation;
+	TObjectPtr<UCurveFloat> CameraRotationByTargetDist;
 
 
 	UPROPERTY(EditDefaultsOnly, Category = "Lock On Camera")

@@ -5,13 +5,9 @@
 #include "ActionFramework/Datas/ItemBaseDataAsset.h"
 #include "ActionFramework/Interface/Equipable.h"
 #include "ActionFramework/Interface/Useable.h"
-#include "ActionFramework/UI/InventoryWidget.h"
-#include "ActionFramework/UI/EquipmentWidget.h"
-#include "ActionFramework/UI/QuickSlotWidget.h"
-#include "ActionFramework/UI/Slot.h"
 #include "ActionFramework/Items/WeaponItem.h"
-#include "ActionFramework/UI/SlotViewModel.h"
-#include "MVVMGameSubSystem.h"
+//#include "uLang/Common/Misc/Optional.h"
+
 
 
 // Sets default values for this component's properties
@@ -20,125 +16,41 @@ UInventoryComponent::UInventoryComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 
-	ItemContainer.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Weapon")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-	ItemContainer.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Helmet")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-	ItemContainer.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Armor")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-	ItemContainer.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Gloves")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-	ItemContainer.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Shoes")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-	ItemContainer.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Tool")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-
-	CurEquipedItemData.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Weapon")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-	CurEquipedItemData.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Helmet")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-	CurEquipedItemData.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Armor")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-	CurEquipedItemData.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Gloves")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-	CurEquipedItemData.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Shoes")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-	CurEquipedItemData.Add(FGameplayTag::RequestGameplayTag(FName("ItemType.Tool")), TArray<TObjectPtr<UItemBaseDataAsset>>());
-
-	// 각 태그에 대해 초기화
-	for (auto& Pair : ItemContainer)
-	{
-		Pair.Value.Init(nullptr, ItemContainerSize);
-	}
-
-	CurEquipedItemData.Find(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Weapon")))->Init(nullptr, 3);
-	CurEquipedItemData.Find(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Armor")))->Init(nullptr, 1);
-	CurEquipedItemData.Find(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Helmet")))->Init(nullptr, 1);
-	CurEquipedItemData.Find(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Gloves")))->Init(nullptr, 1);
-	CurEquipedItemData.Find(FGameplayTag::RequestGameplayTag(FName("ItemType.Equipment.Shoes")))->Init(nullptr, 1);
-	CurEquipedItemData.Find(FGameplayTag::RequestGameplayTag(FName("ItemType.Tool")))->Init(nullptr, 6);
-
-
-
 }
+
+//hud -> ui 생성 -> ui에서 
 
 // Called when the game starts
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
-	
+	TArray<FGameplayTag> ItemTags = ItemTypeTags.GetGameplayTagArray();
+	for (const FGameplayTag& ItemTag : ItemTags)
+	{
+		InventoryItemContainer.Add(ItemTag, TArray<TObjectPtr<UItemBaseDataAsset>>());
+		InventoryItemContainer[ItemTag].Init(nullptr, ItemContainerSize);
+
+		EquipmentItemContainer.Add(ItemTag, TArray<TObjectPtr<UItemBaseDataAsset>>());
+		EquipmentItemContainer[ItemTag].Init(nullptr,GetEquipmentItemCapaicty(ItemTag));
+
+		CurUsingTagEquipmentContainerIndexMap.Add({ ItemTag,0 });
+	}
+	// 초기 아이템 추가
 	AddStartingItem();
-
+	
 }
 
-void UInventoryComponent::ToggleInventoryWidget()
-{
-	if (!InventoryWidget && InventoryWidgetClass)
-	{
 
-		InventoryWidget = CreateWidget<UInventoryWidget>(GetWorld(), InventoryWidgetClass);
-		InventoryWidget->OnCloseButtonClicked.AddDynamic(this, &UInventoryComponent::ToggleInventoryWidget);
-		InventoryWidget->OnItemTypeSelected.AddDynamic(this, &UInventoryComponent::UpdateItemList);
-
-		// 처음 생성 시에만 AddToViewport 호출
-		InventoryWidget->AddToViewport();
-		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);  // 초기 상태는 숨김
-	}
-
-	if (InventoryWidget)
-	{
-		// Visibility를 기반으로 UI 토글
-		if (InventoryWidget->GetVisibility() == ESlateVisibility::Visible)
-		{
-			InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-			SetMouseCursorVisibility(false);
-
-		}
-		else
-		{
-			InventoryWidget->SetVisibility(ESlateVisibility::Visible);
-		}
-	}
-}
-
-void UInventoryComponent::ToggleEquipmentWidget()
-{
-	if (!EquipmentWidget && EquipmentWidgetClass)
-	{
-		EquipmentWidget = CreateWidget<UEquipmentWidget>(GetWorld(), EquipmentWidgetClass);
-		////EquipmentWidget
-		//EquipmentWidget->OnCloseButtonClicked.AddDynamic(this, &UInventoryComponent::ToggleEquipmentWidget);
-		//EquipmentWidget->OnRequestItemList.AddDynamic(this, &UInventoryComponent::UpdateItemList);
-		//EquipmentWidget->OnRequestEquipItem.AddDynamic(this, &UInventoryComponent::EquipUnEquipItemToEquipment);
-
-		/*EquipmentViewModel = NewObject<UEquipmentViewModel>();
-		if (EquipmentViewModel)
-		{
-			
-		}*/
-		
-		
-		// 처음 생성 시에만 AddToViewport 호출
-		EquipmentWidget->AddToViewport();
-		EquipmentWidget->SetVisibility(ESlateVisibility::Collapsed);  // 초기 상태는 숨김
-	}
-
-	if (EquipmentWidget)
-	{
-		// Visibility를 기반으로 UI 토글
-		if (EquipmentWidget->GetVisibility() == ESlateVisibility::Visible)
-		{
-			EquipmentWidget->SetVisibility(ESlateVisibility::Collapsed);
-			SetMouseCursorVisibility(false);
-		}
-		else
-		{
-			EquipmentWidget->SetVisibility(ESlateVisibility::Visible);
-		}
-	}
-}
-
-void UInventoryComponent::ToggleQuickSlotWidget()
-{
-
-}
 
 UItemBaseDataAsset* UInventoryComponent::GetCurrentEquipWeaponData()
 {
-	if (CurEquipedItemData[FGameplayTag::RequestGameplayTag("ItemType.Equipment.Weapon")][CurUsingWeaponIndex] != nullptr)
+	FGameplayTag WeaponTag = FGameplayTag::RequestGameplayTag("ItemType.Equipment.Weapon");
+	uint8* CurIndex = CurUsingTagEquipmentContainerIndexMap.Find(WeaponTag);
+
+	if (EquipmentItemContainer[WeaponTag][*CurIndex] != nullptr)
 	{
-		return CurEquipedItemData[FGameplayTag::RequestGameplayTag("ItemType.Equipment.Weapon")][CurUsingWeaponIndex];
+		return EquipmentItemContainer[WeaponTag][*CurIndex];
 	}
 
 	return nullptr;
@@ -154,9 +66,11 @@ void UInventoryComponent::AddStartingItem()
 		
 		if (DuplicatedItemDataAsset != nullptr)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *DuplicatedItemDataAsset->GetOuter()->GetName());
 			AddItemToItemContainer(DuplicatedItemDataAsset);
-			AddItemToQuickSlotWidget(DuplicatedItemDataAsset);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("DuplicatedItemDataAsset null"));
 		}
 	}
 }
@@ -168,7 +82,7 @@ void UInventoryComponent::AddItemToItemContainer(const UItemBaseDataAsset* Added
 
 		FGameplayTag ItemTypeTag = AddedItem->ItemTypeTag;
 
-		if (TArray<TObjectPtr<UItemBaseDataAsset>>* Items = ItemContainer.Find(ItemTypeTag))
+		if (TArray<TObjectPtr<UItemBaseDataAsset>>* Items = InventoryItemContainer.Find(ItemTypeTag))
 		{
 			int32 EmptySlotIndex = Items->IndexOfByKey(nullptr);
 			// 1. 빈 슬롯(Null) 검색 및 아이템 추가
@@ -183,139 +97,281 @@ void UInventoryComponent::AddItemToItemContainer(const UItemBaseDataAsset* Added
 		}
 }
 
-void UInventoryComponent::AddItemToQuickSlotWidget(const UItemBaseDataAsset* AddedItem)
+uint8 UInventoryComponent::GetEquipmentItemCapaicty(FGameplayTag ItemType)
 {
+	if (EquipmentItemContainerCapacity.Contains(ItemType))
+	{
+		return EquipmentItemContainerCapacity[ItemType];
+	}
+
+	return INDEX_NONE;
 }
 
-void UInventoryComponent::EquipItem(const UItemBaseDataAsset* AddedItem)
+void UInventoryComponent::ChangeNextWeapon(float ChangedIndex)
 {
+	FGameplayTag WeaponTag = FGameplayTag::RequestGameplayTag("ItemType.Equipment.Weapon");
+	uint8* WeaponCapacity = EquipmentItemContainerCapacity.Find(FGameplayTag::RequestGameplayTag("ItemType.Equipment.Weapon"));
+	uint8* CurIndex = CurUsingTagEquipmentContainerIndexMap.Find(WeaponTag);
+
+	const TArray<TObjectPtr<UItemBaseDataAsset>>* WeaponEquipContainer = EquipmentItemContainer.Find(WeaponTag);
+	if ((*WeaponEquipContainer)[*CurIndex] != nullptr)
+	{
+		IEquipable* EquipableItem = Cast<IEquipable>((*WeaponEquipContainer)[*CurIndex]);
+		if (EquipableItem)
+		{
+			EquipableItem->UnEquip();
+		}
+	}
+
+	(*CurIndex) += ChangedIndex;
+	if (*CurIndex >= *WeaponCapacity)
+	{
+		*CurIndex = 0;
+	}
+	else if (*CurIndex < 0)
+	{
+		*CurIndex = *WeaponCapacity;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Change Weapon Index %d"), *CurIndex);
+
+	if ((*WeaponEquipContainer)[*CurIndex] != nullptr)
+	{
+		IEquipable* EquipableItem = Cast<IEquipable>((*WeaponEquipContainer)[*CurIndex]);
+		if (EquipableItem)
+		{
+			EquipableItem->Equip();
+		}
+	}	
 }
 
-void UInventoryComponent::UnEquipItem(const UItemBaseDataAsset* AddedItem)
+void UInventoryComponent::EquipItemFromInventoryItemContainer(FGameplayTag ItemTypeTag, uint8 RequsetItemIndex, uint8 UpdateSlotIndex)
 {
+
+	UE_LOG(LogTemp, Warning, TEXT("EquipItemFromInventoryItemContainer :: RequsetItemIndex %d , UpdateIndex %d"), RequsetItemIndex, UpdateSlotIndex);
+	if (TArray<TObjectPtr<UItemBaseDataAsset>>* Items = InventoryItemContainer.Find(ItemTypeTag))
+	{
+		if (Items->IsValidIndex(RequsetItemIndex))
+		{
+			UItemBaseDataAsset* SelectedItem = (*Items)[RequsetItemIndex];
+			IEquipable* EquipableItem = Cast<IEquipable>((*Items)[RequsetItemIndex]);
+			
+			if (EquipableItem)
+			{
+				uint8* Index = CurUsingTagEquipmentContainerIndexMap.Find(ItemTypeTag);
+				if(UpdateSlotIndex == *Index)
+				{
+					if (EquipableItem->Equip())
+					{
+						EquipmentItemContainer[ItemTypeTag][UpdateSlotIndex] = SelectedItem;
+						OnEquipmentChange.Broadcast(ItemTypeTag,UpdateSlotIndex, SelectedItem);
+					}
+				}
+				else
+				{
+
+					EquipmentItemContainer[ItemTypeTag][UpdateSlotIndex] = SelectedItem;
+					OnEquipmentChange.Broadcast(ItemTypeTag,UpdateSlotIndex, SelectedItem);
+				}
+			}
+		}
+	}
 }
 
-void UInventoryComponent::UseItem(const UItemBaseDataAsset* AddedItem)
+void UInventoryComponent::UnEquipItem(FGameplayTag ItemTypeTag, uint8 RequsetItemIndex, uint8 UpdateSlotIndex)
 {
+	const TArray<TObjectPtr<UItemBaseDataAsset>>* Items = EquipmentItemContainer.Find(ItemTypeTag);
+	if(Items->IsValidIndex(RequsetItemIndex))
+	{
+		UItemBaseDataAsset* SelectedItem = (*Items)[RequsetItemIndex];
+		IEquipable* EquipableItem = Cast<IEquipable>((*Items)[RequsetItemIndex]);
+		uint8* Index = CurUsingTagEquipmentContainerIndexMap.Find(ItemTypeTag);
+
+		if (UpdateSlotIndex == *Index)
+		{
+			if (EquipableItem->UnEquip())
+			{
+				EquipmentItemContainer[ItemTypeTag][UpdateSlotIndex] = nullptr;
+				OnEquipmentChange.Broadcast(ItemTypeTag,UpdateSlotIndex, nullptr);
+			}
+		}
+		else
+		{
+			EquipmentItemContainer[ItemTypeTag][UpdateSlotIndex] = nullptr;
+			OnEquipmentChange.Broadcast(ItemTypeTag, UpdateSlotIndex, nullptr);
+		}
+	}
 }
 
-//AActor* UInventoryComponent::SpawnedItemFromDataAsset(const UItemBaseDataAsset* InData)
-//{
-//	AItemBase* SpawnItem = nullptr;
-//	if (InData == nullptr)
-//		return nullptr;
-//	if (InData->ActorToSpawnClass == nullptr)
-//		return nullptr;
-//
-//	const FTransform SpawnTransform = GetOwner()->GetActorTransform();
-//	FActorSpawnParameters SpawnInfo;
-//	SpawnInfo.Owner = GetOwner();
-//	SpawnItem = GetWorld()->SpawnActor<AItemBase>(InData->ActorToSpawnClass, SpawnTransform, SpawnInfo);
-//
-//	return nullptr;
-//}
+bool UInventoryComponent::IsEquippedItem(FGameplayTag ItemTypeTag, uint8 Index)
+{
+	if (TArray<TObjectPtr<UItemBaseDataAsset>>* Items = EquipmentItemContainer.Find(ItemTypeTag))
+	{
+		if (Items->IsValidIndex(Index))
+		{
+			if (UItemBaseDataAsset* SelectedItem = (*Items)[Index])
+			{
+				return true;
+			}	
+		}
+	}
+	return false;
+	
+}
 
 void UInventoryComponent::EquipUnEquipItemToEquipment(FGameplayTag ItemType, int32 ContainerIndex , int32 EquipIndex)
 {
 
-	if (TArray<TObjectPtr<UItemBaseDataAsset>>* Items = ItemContainer.Find(ItemType))
-	{
-		// 2. 유효한 ContainerIndex 확인
-		if (Items->IsValidIndex(ContainerIndex))
-		{
-			UItemBaseDataAsset* SelectedItem = (*Items)[ContainerIndex];
-			if (SelectedItem)
-			{
-				TArray<TObjectPtr<UItemBaseDataAsset>>* EquipItems = CurEquipedItemData.Find(ItemType);
-				// 같은 아이템 클릭시 기존 장비 해제
-				if (EquipItems && EquipItems->IsValidIndex(EquipIndex))
-				{
-					UItemBaseDataAsset* CurrentlyEquippedItem = (*EquipItems)[EquipIndex];
-					if (CurrentlyEquippedItem && CurrentlyEquippedItem->Implements<UEquipable>()) 
-					{
-						UE_LOG(LogTemp, Warning, TEXT("UnEquip"));
-						IEquipable* EquipableItem = Cast<IEquipable>(CurrentlyEquippedItem);
-						EquipableItem->UnEquip();
-						(*EquipItems)[EquipIndex] = nullptr;
+	//if (TArray<TObjectPtr<UItemBaseDataAsset>>* Items = ItemContainer.Find(ItemType))
+	//{
+	//	// 2. 유효한 ContainerIndex 확인
+	//	if (Items->IsValidIndex(ContainerIndex))
+	//	{
+	//		UItemBaseDataAsset* SelectedItem = (*Items)[ContainerIndex];
+	//		if (SelectedItem)
+	//		{
+	//			TArray<TObjectPtr<UItemBaseDataAsset>>* EquipItems = EquipmentItemContainer.Find(ItemType);
+	//			// 같은 아이템 클릭시 기존 장비 해제
+	//			if (EquipItems && EquipItems->IsValidIndex(EquipIndex))
+	//			{
+	//				UItemBaseDataAsset* CurrentlyEquippedItem = (*EquipItems)[EquipIndex];
+	//				if (CurrentlyEquippedItem && CurrentlyEquippedItem->Implements<UEquipable>()) 
+	//				{
+	//					UE_LOG(LogTemp, Warning, TEXT("UnEquip"));
+	//					IEquipable* EquipableItem = Cast<IEquipable>(CurrentlyEquippedItem);
+	//					EquipableItem->UnEquip();
+	//					(*EquipItems)[EquipIndex] = nullptr;
 
-						if (EquipmentWidget)
-						{
-							FSlotDisplayInfo SlotInfo;
-							SlotInfo.Icon = nullptr; // 또는 빈 아이콘 리소스 설정
-							SlotInfo.Name = FText::FromString(TEXT("")); // 빈 텍스트
-							SlotInfo.Count = 0; // 카운트는 0
-							EquipmentWidget->UpdateEquipRequestSlot(SlotInfo);
-							return;
-						}
-					}
-				}
+	//					if (EquipmentWidget)
+	//					{
+	//						FSlotDisplayInfo SlotInfo;
+	//						SlotInfo.Icon = nullptr; // 또는 빈 아이콘 리소스 설정
+	//						SlotInfo.Name = FText::FromString(TEXT("")); // 빈 텍스트
+	//						SlotInfo.Count = 0; // 카운트는 0
+	//						//EquipmentWidget->UpdateEquipRequestSlot(SlotInfo);
+	//						return;
+	//					}
+	//				}
+	//			}
 
-				// 다른 아이템 클릭시 새 장비 장착
-				if (EquipItems) 
-				{
-					(*EquipItems)[EquipIndex] = SelectedItem;
-					if (SelectedItem->Implements<UEquipable>())
-					{
-						IEquipable* EquipableItem = Cast<IEquipable>(SelectedItem);
-						EquipableItem->Equip();
-					}
-					// 4. EquipmentWidget 업데이트
-					if (EquipmentWidget)
-					{
-						FSlotDisplayInfo SlotInfo;
-						SlotInfo.Icon = SelectedItem->AssetData.Icon;
-						SlotInfo.Name = SelectedItem->TextData.Name;
-						SlotInfo.Count = SelectedItem->NumericData.Quantity;
+	//			// 다른 아이템 클릭시 새 장비 장착
+	//			if (EquipItems) 
+	//			{
+	//				(*EquipItems)[EquipIndex] = SelectedItem;
+	//				if (SelectedItem->Implements<UEquipable>())
+	//				{
+	//					IEquipable* EquipableItem = Cast<IEquipable>(SelectedItem);
+	//					EquipableItem->Equip();
+	//				}
+	//				// 4. EquipmentWidget 업데이트
+	//				if (EquipmentWidget)
+	//				{
+	//					FSlotDisplayInfo SlotInfo;
+	//					SlotInfo.Icon = SelectedItem->AssetData.Icon;
+	//					SlotInfo.Name = SelectedItem->TextData.Name;
+	//					SlotInfo.Count = SelectedItem->NumericData.Quantity;
 
-						EquipmentWidget->UpdateEquipRequestSlot(SlotInfo);
-					}
-				}
-			}
-		}
-	}
+	//					//EquipmentWidget->UpdateEquipRequestSlot(SlotInfo);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 }
 
-
-void UInventoryComponent::UpdateItemList(FGameplayTag ItemTypeTag, UUserWidget* RequestingWidget)
+const TArray<TObjectPtr<UItemBaseDataAsset>>* UInventoryComponent::GetInventoryItems(FGameplayTag ItemType)
 {
-	//ItemContainer에서 ItemTypeTag에 맞는 아이템 배열을 가져와서 InventoryWidget을 Update하도록합니다.
-		// ItemContainer에서 ItemTypeTag에 해당하는 아이템 배열을 가져옴
-	TArray<FSlotDisplayInfo> Infos;
 
-	if (TArray<TObjectPtr<UItemBaseDataAsset>>* Items = ItemContainer.Find(ItemTypeTag))
+	if (const TArray<TObjectPtr<UItemBaseDataAsset>>* FoundPtr = InventoryItemContainer.Find(ItemType))
 	{
-		for (const auto& Item : *Items)
-		{
-			if (Item)
-			{
-				Infos.Add(FSlotDisplayInfo(Item->AssetData.Icon, Item->NumericData.Quantity, Item->TextData.Name));
-			}
-		}
-		// 호출한 위젯이 InventoryWidget인 경우
-		if (UInventoryWidget* InventoryWidgetInstance = Cast<UInventoryWidget>(RequestingWidget))
-		{
-			InventoryWidgetInstance->UpdateItemListPanel(Infos);
-			//InventoryWidgetInstance->SetCurOpenItemListPanel(ItemTypeTag);
-		}
-		// 호출한 위젯이 EquipmentWidget인 경우
-		else if (UEquipmentWidget* EquipmentWidgetInstance = Cast<UEquipmentWidget>(RequestingWidget))
-		{
-			EquipmentWidgetInstance->UpdateItemListPanel(Infos);
-			EquipmentWidgetInstance->SetCurOpenItemListPanel(ItemTypeTag);
-		}
+		return FoundPtr;  
 	}
+	
+	return nullptr;
 }
 
-void UInventoryComponent::UpdateEquipmentWiget(FGameplayTag ItemTypeTag)
+const TArray<TObjectPtr<UItemBaseDataAsset>>* UInventoryComponent::GetEquipmentItems(FGameplayTag ItemType)
 {
+	if (const TArray<TObjectPtr<UItemBaseDataAsset>>* FoundPtr = EquipmentItemContainer.Find(ItemType))
+	{
+		return FoundPtr;
+	}
+	return nullptr;
 }
 
-void UInventoryComponent::SetMouseCursorVisibility(bool bIsVisible)
+const UItemBaseDataAsset* UInventoryComponent::GetInventoryItem(FGameplayTag ItemType, uint8 Index)
 {
-	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+	// 1) ItemType에 해당하는 배열을 찾는다
+	const TArray<TObjectPtr<UItemBaseDataAsset>>* FoundArray = InventoryItemContainer.Find(ItemType);
+	if (!FoundArray)
 	{
-		PlayerController->SetShowMouseCursor(bIsVisible);
+		// 로그를 남기고 nullptr 반환
+		UE_LOG(LogTemp, Warning, TEXT("GetInventory: No container found for ItemType [%s]"), *ItemType.ToString());
+		return nullptr;
 	}
+
+	// 2) 인덱스 범위가 유효한지 확인
+	if (!FoundArray->IsValidIndex(Index))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetInventory: Index [%d] is out of range for ItemType [%s]. Size=[%d]"),
+			Index, *ItemType.ToString(), FoundArray->Num());
+		return nullptr;
+	}
+
+	// 3) 실제 아이템 확인
+	const UItemBaseDataAsset* FoundItem = (*FoundArray)[Index];
+	if (!FoundItem)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetInventory: Found a null pointer at Index [%d] in container for ItemType [%s]"),
+			Index, *ItemType.ToString());
+		return nullptr;
+	}
+
+	// 4) 정상적인 아이템이 있으므로 그대로 반환
+	return FoundItem;
+}
+
+const UItemBaseDataAsset* UInventoryComponent::GetEquipmentItem(FGameplayTag ItemType, uint8 Index)
+{
+	// 1) ItemType에 해당하는 배열을 찾는다
+	const TArray<TObjectPtr<UItemBaseDataAsset>>* FoundArray = EquipmentItemContainer.Find(ItemType);
+	if (!FoundArray)
+	{
+		// 로그를 남기고 nullptr 반환
+		UE_LOG(LogTemp, Warning, TEXT("GetEquipmentItem: No container found for ItemType [%s]"), *ItemType.ToString());
+		return nullptr;
+	}
+
+	// 2) 인덱스 범위가 유효한지 확인
+	if (!FoundArray->IsValidIndex(Index))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetEquipmentItem: Index [%d] is out of range for ItemType [%s]. Size=[%d]"),
+			Index, *ItemType.ToString(), FoundArray->Num());
+		return nullptr;
+	}
+
+	// 3) 실제 아이템 확인
+	const UItemBaseDataAsset* FoundItem = (*FoundArray)[Index];
+	if (!FoundItem)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetEquipmentItem: Found a null pointer at Index [%d] in container for ItemType [%s]"),
+			Index, *ItemType.ToString());
+		return nullptr;
+	}
+
+	// 4) 정상적인 아이템이 있으므로 그대로 반환
+	return FoundItem;
+}
+
+bool UInventoryComponent::IsItemEquipped(UItemBaseDataAsset* Item)
+{
+	TArray<TObjectPtr<UItemBaseDataAsset>>* Items = EquipmentItemContainer.Find(Item->ItemTypeTag);
+
+	if (Items->Contains(Item))
+	{
+		return  true;
+	}
+	return false;
 }
 
 

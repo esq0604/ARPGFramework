@@ -52,10 +52,8 @@ void UARPGMeleeAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle H
  //       return;
  //   }
 
-    UE_LOG(LogTemp, Warning, TEXT("Attack Ability"));
     if (CommitAbility(Handle, ActorInfo, ActivationInfo))
     {
-        UE_LOG(LogTemp, Warning, TEXT("Do Attack"));
         CurrentActivateComboIndex = CurrentComboIndex;
         Attack(CurrentComboIndex);
     }
@@ -147,7 +145,6 @@ void UARPGMeleeAttackAbility::AttackHitEvent(FGameplayEventData Payload)
      {
          return;
      }
-     //Payload.ContextHandle.
      UAbilityTask_WaitGameplayEvent* ParryEvent = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("State.Block.Parry"), nullptr, true, true);
      ParryEvent->EventReceived.AddDynamic(this, &UARPGMeleeAttackAbility::AttackParryEvent);
      ParryEvent->ReadyForActivation();
@@ -158,15 +155,11 @@ void UARPGMeleeAttackAbility::AttackHitEvent(FGameplayEventData Payload)
      UAbilitySystemComponent* TargetASC = GetAttackHitTargetASC(Payload.Target);
 
      if (TargetASC && DamageClass)
-     {/*
-         FGameplayEventData PayloadData;
-         PayloadData.Instigator = GetAvatarActorFromActorInfo();
-         PayloadData.ContextHandle = */
-         UE_LOG(LogTemp, Warning, TEXT("Payload Instigator %s"), *Payload.ContextHandle.GetInstigator()->GetName());
+     {
          GetActorInfo().AbilitySystemComponent->ApplyGameplayEffectToTarget(DamageClass.GetDefaultObject(), TargetASC,0.f,Payload.ContextHandle);
      }
      
-
+     //공격로직에서 상대의 방어로직까지 신경쓰는것이 아닌, 공격만 하도록 수정합니다
      //if (TargetASC)
      //{
      //    //ApplyGameplayEffectSpecToTarget()
@@ -252,6 +245,7 @@ void UARPGMeleeAttackAbility::AddCanNextComboTag()
     {
         AddWaitTagTask->EndTask();
     }
+
     WaitInputTask = UAbilityTask_WaitInputPress::WaitInputPress(this);
     WaitInputTask->OnPress.AddDynamic(this, &UARPGMeleeAttackAbility::NextAttackInputEvent);
     WaitInputTask->ReadyForActivation();

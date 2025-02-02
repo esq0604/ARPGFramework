@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "ActionFramework/UI/ARPGUserWidget.h"
 #include "GameplayTagContainer.h"
 #include "EscMenuWidget.generated.h"
 
@@ -14,15 +14,18 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMenuButtonClicked, FGameplayTag, 
 
 class UButton;
 UCLASS()
-class ACTIONFRAMEWORK_API UEscMenuWidget : public UUserWidget
+class ACTIONFRAMEWORK_API UEscMenuWidget : public UARPGUserWidget
 {
 	GENERATED_BODY()
 	
 public:
 	virtual void NativeConstruct() override;
-
+	virtual void NativeDestruct() override;
 	UPROPERTY()
 	FOnMenuButtonClicked OnMenuButtonClicked;
+private:
+	virtual void WidgetPresenterSet() override;
+
 private:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> InventoryButton;

@@ -4,66 +4,69 @@
 #include "ActionFramework/UI/EquipmentWidget.h"
 #include "ActionFramework/UI/Slot.h"
 #include "ActionFramework/UI/ItemListPanel.h"
+#include "ActionFramework/UI/SlotWrapperWidget.h"
+#include "ActionFramework/UI/ItemDescriptionPanel.h"
+#include "ActionFramework/UI/EquipmentPresenter.h"
+#include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "Components/UniformGridPanel.h"
 
 void UEquipmentWidget::NativeConstruct()
 {
-    if (ItemListPanel)
-    {
-        ItemListPanel->InitializeSlot(SlotCapacity);
-        ItemListPanel->OnItemListSlotClicked.AddDynamic(this, &UEquipmentWidget::HandleItemListSlotClicked);
-//        ItemListPanel->OnItemListSlotEntered.AddDynamic(this,)
-    }
+    Super::NativeConstruct();
+
 	if (CloseButton)
 	{
 		CloseButton->OnClicked.AddDynamic(this, &UEquipmentWidget::HandleCloseButtonClicked);
 	}
 
-    if (WeaponPanel)
+
+    InitSlotInPanel(WeaponPanel);
+    InitSlotInPanel(ArmorPanel);
+    InitSlotInPanel(ToolPanel);
+
+}
+
+void UEquipmentWidget::NativeDestruct()
+{
+    Super::NativeDestruct();
+
+    if (CloseButton)
     {
-        for (int32 i = 0; i < NumWeaponSlot; i++)  // 무기 슬롯 3개 예시
+        CloseButton->OnClicked.RemoveDynamic(this, &UEquipmentWidget::HandleCloseButtonClicked);
+    }
+
+    for (UWidget* Widget : WeaponPanel->GetAllChildren())
+    {
+        USlot* CategorySlot = Cast<USlot>(Widget);
+        if (CategorySlot)
         {
-            USlot* NewSlot = CreateWidget<USlot>(this, SlotWidgetClass);
-            NewSlot->OnSlotClicked.AddDynamic(this, &UEquipmentWidget::HandleEquipmentSlotClicked);
-            WeaponPanel->AddChildToUniformGrid(NewSlot, i / NumWeaponSlot, i % NumWeaponSlot);  // 행, 열 추가
-            SlotTagMap.Add(NewSlot, FGameplayTag::RequestGameplayTag(TEXT("ItemType.Equipment.Weapon")));
             
-
+            CategorySlot->OnSlotClicked.RemoveDynamic(this, &UEquipmentWidget::OnCategorySlotClicked);
         }
     }
-
-    if (ToolPanel)
+    for (UWidget* Widget : ArmorPanel->GetAllChildren())
     {
-        for (int32 i = 0; i < NumToolSlot; i++)  
+        USlot* CategorySlot = Cast<USlot>(Widget);
+        if (CategorySlot)
         {
-            USlot* NewSlot = CreateWidget<USlot>(this, SlotWidgetClass);
-            NewSlot->OnSlotClicked.AddDynamic(this, &UEquipmentWidget::HandleEquipmentSlotClicked);
-            ToolPanel->AddChildToUniformGrid(NewSlot, i / 3, i % 3);  // 행, 열 추가
-            SlotTagMap.Add(NewSlot, FGameplayTag::RequestGameplayTag(TEXT("ItemType.Tool")));
-
+            CategorySlot->OnSlotClicked.RemoveDynamic(this, &UEquipmentWidget::OnCategorySlotClicked);
         }
     }
+    for (UWidget* Widget : ToolPanel->GetAllChildren())
+    {
+        USlot* CategorySlot = Cast<USlot>(Widget);
+        if (CategorySlot)
+        {
+            CategorySlot->OnSlotClicked.RemoveDynamic(this, &UEquipmentWidget::OnCategorySlotClicked);
+        }
+    }
+}
 
-    ArmorSlot->OnSlotClicked.AddDynamic(this, &UEquipmentWidget::HandleEquipmentSlotClicked);
-    ShoesSlot->OnSlotClicked.AddDynamic(this, &UEquipmentWidget::HandleEquipmentSlotClicked);
-    GlovesSlot->OnSlotClicked.AddDynamic(this, &UEquipmentWidget::HandleEquipmentSlotClicked);
-    HelmetSlot->OnSlotClicked.AddDynamic(this, &UEquipmentWidget::HandleEquipmentSlotClicked);
-
-    // 개별 슬롯에 Tag 매핑
-    SlotTagMap.Add(ArmorSlot, FGameplayTag::RequestGameplayTag(TEXT("ItemType.Equipment.Armor")));
-    SlotTagMap.Add(GlovesSlot, FGameplayTag::RequestGameplayTag(TEXT("ItemType.Equipment.Gloves")));
-    SlotTagMap.Add(HelmetSlot, FGameplayTag::RequestGameplayTag(TEXT("ItemType.Equipment.Helmet")));
-    SlotTagMap.Add(ShoesSlot, FGameplayTag::RequestGameplayTag(TEXT("ItemType.Equipment.Shoes")));
-
-    // 태그와 패널 매핑
-    TagPanelMap.Add(FGameplayTag::RequestGameplayTag(TEXT("ItemType.Equipment.Weapon")), WeaponPanel);
-    TagPanelMap.Add(FGameplayTag::RequestGameplayTag(TEXT("ItemType.Tool")), ToolPanel);
-
-    // 개별 슬롯 태그는 nullptr로 처리 (개별 슬롯은 Panel이 없기 때문)
-    TagPanelMap.Add(FGameplayTag::RequestGameplayTag(TEXT("ItemType.Equipment.Armor")), nullptr);
-    TagPanelMap.Add(FGameplayTag::RequestGameplayTag(TEXT("ItemType.Equipment.Helmet")), nullptr);
-    TagPanelMap.Add(FGameplayTag::RequestGameplayTag(TEXT("ItemType.Equipment.Shoes")), nullptr);
+void UEquipmentWidget::ShowItemListPanel()
+{
+    ItemListPanel->SetVisibility(ESlateVisibility::Visible);
+    ItemCategoryPanel->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UEquipmentWidget::HandleCloseButtonClicked()
@@ -75,103 +78,112 @@ void UEquipmentWidget::HandleCloseButtonClicked()
     }
 
     // WrapperPanel 보이기
-    if (SlotWrapperPanel)
+    if (ItemCategoryPanel)
     {
-        SlotWrapperPanel->SetVisibility(ESlateVisibility::Visible);
+        ItemCategoryPanel->SetVisibility(ESlateVisibility::Visible);
     }
 
-	OnCloseButtonClicked.Broadcast();
-}
-
-void UEquipmentWidget::HandleEquipmentSlotClicked(USlot* ClickedSlot)
-{
-    //슬롯이 보유가능한 아이템 타입에 해당하는 ItemListPanel로 업데이트하도록 InventoryComponent에 이벤트를 보냅니다.
-     // 클릭된 Slot이 어떤 Panel에 속해 있는지 확인
-    if (SlotTagMap.Contains(ClickedSlot))
-    {
-        EquipRequestSlot = ClickedSlot;
-        FGameplayTag SlotTag = *SlotTagMap.Find(ClickedSlot);
-
-        // InventoryComponent를 통해 아이템 목록 요청
-        OnRequestItemList.Broadcast(SlotTag,this);
-
-        // WrapperPanel 숨기기
-        if (SlotWrapperPanel)
-        {
-            SlotWrapperPanel->SetVisibility(ESlateVisibility::Collapsed);
-        }
-
-        // ItemListPanel 보이기
-        if (ItemListPanel)
-        {
-            ItemListPanel->SetVisibility(ESlateVisibility::Visible);
-        }
-    }
- 
-}
-
-void UEquipmentWidget::UpdateItemListPanel(const TArray<FSlotDisplayInfo>& Infos)
-{
-    ItemListPanel->ClearSlots();
-
-    for (int i = 0; i < Infos.Num(); i++)
-    {
-        ItemListPanel->UpdateSlot(i, Infos[i]);
-    }
-}
-
-void UEquipmentWidget::UpdateEquipRequestSlot(const FSlotDisplayInfo& Info)
-{
-    EquipRequestSlot->UpdateItemInfo(Info);
-    ItemListPanel->SetVisibility(ESlateVisibility::Collapsed);
-    SlotWrapperPanel->SetVisibility(ESlateVisibility::Visible);
-}
-
-void UEquipmentWidget::HandleItemListSlotClicked(int32 ClickedSlotIndex)
-{
-    //ClickedSlotIndex와 CurOpenItemListPanel를 넘겨주는 델리게이트를 Broadcast하여 InventoryComponent에 아이템을 장착하고 업데이트하도록 요청해야합니다.
-    int32 RequsetEquipItemSlotIndex = GetSlotIndex(CurOpenItemListPanel);
+    //RemoveFromParent();
     
-    OnRequestEquipItem.Broadcast(CurOpenItemListPanel, ClickedSlotIndex, RequsetEquipItemSlotIndex);
-    UE_LOG(LogTemp, Log, TEXT("Requesting Equip Item with Tag: %s, Slot Index: %d"),
-        *CurOpenItemListPanel.ToString(), ClickedSlotIndex);
-
-    UE_LOG(LogTemp, Warning, TEXT("Requset Equip Item Slot Index : %d"), RequsetEquipItemSlotIndex);
+    this->SetVisibility(ESlateVisibility::Collapsed);
 }
 
-void UEquipmentWidget::HandleItemListSlotEntered(int32 EnteredSlotIndex)
+void UEquipmentWidget::OnCategorySlotClicked(USlot* ClickedSlot)
 {
-    // 패널이 있는 경우
-    int32 RequsetEquipItemNameSlotIndex = GetSlotIndex(CurOpenItemListPanel);
-
-    //OnRequestItemName.Broadcast(CurOpenItemListPanel, EnteredSlotIndex, RequsetEquipItemNameSlotIndex);
+    OnCategorySlotClickedDelegate.Broadcast(ClickedSlot->GetSlotType(), ClickedSlot->SlotIndex);
 }
 
-int32 UEquipmentWidget::GetSlotIndex(FGameplayTag ItemTypeTag)
+void UEquipmentWidget::OnCategorySlotEntered(USlot* EnteredSlot)
 {
+    OnCategorySlotEnteredDelegate.Broadcast(EnteredSlot->GetSlotType(), EnteredSlot->SlotIndex);
+}
 
-      // 태그에 매핑된 패널 검색
-    UUniformGridPanel** PanelPtr = TagPanelMap.Find(ItemTypeTag);
-
-    // 패널이 있는 경우
-    if (PanelPtr && *PanelPtr)
+void UEquipmentWidget::InitSlotInPanel(UUniformGridPanel* SlotPanel)
+{
+    TArray<UWidget*> Widgets = SlotPanel->GetAllChildren();
+    for (int idx = 0; idx < Widgets.Num(); idx++)
     {
-        return (*PanelPtr)->GetChildIndex(EquipRequestSlot);
+        
+        USlot* CategorySlot = Cast<USlot>(Widgets[idx]);
+        if (CategorySlot)
+        {
+            SlotTagMap.FindOrAdd(CategorySlot->GetSlotType()).Add(CategorySlot->SlotIndex, CategorySlot);
+            //CategorySlot->SlotIndex=idx;
+            CategorySlot->OnSlotMouseEnter.AddDynamic(this, &UEquipmentWidget::OnCategorySlotEntered);
+            CategorySlot->OnSlotClicked.AddDynamic(this, &UEquipmentWidget::OnCategorySlotClicked);
+           //SlotTagMap.Add(CategorySlot, CategorySlot->GetSlotType());
+        }
+        
     }
-
-    // 개별 슬롯의 경우
-    if (SlotTagMap.Contains(EquipRequestSlot) && SlotTagMap[EquipRequestSlot] == ItemTypeTag)
-    {
-        return 0;
-    }
-
-    // 매칭되지 않을 경우
-    return INDEX_NONE;
 }
 
-void UEquipmentWidget::SetCurOpenItemListPanel(FGameplayTag ItemTypeTag)
+void UEquipmentWidget::UpdateSlotNameTextBlock(FGameplayTag ItemTypeTag, uint8 Index)
 {
-    CurOpenItemListPanel = ItemTypeTag;
+    USlot* FoundSlot = FindSlotAtSlotTagMap(ItemTypeTag, Index);
+
+    if (FoundSlot)
+    {
+
+        SlotName_TextBlock->SetText(FoundSlot->SlotNameText);
+    }
+}
+
+void UEquipmentWidget::UpdateStoreItemNameTextBlock(FGameplayTag ItemTypeTag, uint8 Index)
+{
+    USlot* FoundSlot = FindSlotAtSlotTagMap(ItemTypeTag, Index);
+    if (FoundSlot)
+    {
+        StoreItemName_TextBlock->SetText(FoundSlot->StoreItemText);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ChangeStoreItemNameTextBlock , -, "));
+        StoreItemName_TextBlock->SetText(FText::FromString("-"));
+    }
+}
+
+USlot* UEquipmentWidget::FindSlotAtSlotTagMap(FGameplayTag ItemTypeTag, uint8 Index)
+{
+    if (SlotTagMap.Contains(ItemTypeTag))
+    {
+        const TMap<uint8, TObjectPtr<USlot>>& IndexMap = SlotTagMap[ItemTypeTag];
+        USlot* FoundSlot = IndexMap.FindRef(Index);
+        if (FoundSlot)
+        {
+            return FoundSlot;
+        }
+    }
+    return nullptr;
+}
+
+
+void UEquipmentWidget::UpdateSlot(FGameplayTag ItemTypeTag, uint8 Index, const FSlotDisplayInfo& SlotInfo)
+{ 
+    USlot* FoundSlot =  FindSlotAtSlotTagMap(ItemTypeTag, Index);
+    if (FoundSlot)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("FindSlot , Do EquipmentWidget::UpdateSlot"));
+        FoundSlot->UpdateSlot(SlotInfo);
+    }
+    else
+    {
+
+        UE_LOG(LogTemp, Warning, TEXT("CanNot FindSlot , Do EquipmentWidget::UpdateSlot Fail"));
+    }
+    ItemCategoryPanel->SetVisibility(ESlateVisibility::Visible);
+
+}
+
+void UEquipmentWidget::WidgetPresenterSet()
+{
+    UEquipmentPresenter* EquipPresenter = Cast<UEquipmentPresenter>(GetPresenter());
+
+    //ModelDataChangeEvent
+    EquipPresenter->OnEquipItemEvent.AddDynamic(this, &UEquipmentWidget::UpdateSlot);
+    
+    //MouseEvent
+    EquipPresenter->OnCategorySlotMouseEntered.AddDynamic(this, &UEquipmentWidget::UpdateSlotNameTextBlock);
+    EquipPresenter->OnCategorySlotMouseEntered.AddDynamic(this, &UEquipmentWidget::UpdateStoreItemNameTextBlock);
 }
 
 

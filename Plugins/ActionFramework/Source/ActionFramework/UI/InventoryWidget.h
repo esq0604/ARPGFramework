@@ -25,7 +25,7 @@ class ACTIONFRAMEWORK_API UInventoryWidget : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 
-	void UpdateItemListPanel(const TArray<FSlotDisplayInfo>& Infos);
+	//void UpdateItemListPanel(const TArray<FSlotDisplayInfo>& Infos);
 	void SetCurOpenItemListPanel(FGameplayTag ItemTypeTag);
 
 private:

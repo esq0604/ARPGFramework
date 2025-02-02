@@ -21,21 +21,21 @@ void UInventoryWidget::NativeConstruct()
 		CloseButton->OnClicked.AddDynamic(this, &UInventoryWidget::HandleCloseButtonClicked);
 	}
 
-	if (ItemListPanel)
+	/*if (ItemListPanel)
 	{
 		ItemListPanel->InitializeSlot(SlotCapacity);
-	}
+	}*/
 }
 
-void UInventoryWidget::UpdateItemListPanel(const TArray<FSlotDisplayInfo>& Infos)
-{
-	ItemListPanel->ClearSlots();
-
-	for (int i = 0; i < Infos.Num(); i++)
-	{
-		ItemListPanel->UpdateSlot(i, Infos[i]);
-	}
-}
+//void UInventoryWidget::UpdateItemListPanel(const TArray<FSlotDisplayInfo>& Infos)
+//{
+//	ItemListPanel->ClearSlots();
+//
+//	for (int i = 0; i < Infos.Num(); i++)
+//	{
+//		ItemListPanel->UpdateSlot(i, Infos[i]);
+//	}
+//}
 
 void UInventoryWidget::HandleButtonClicked(FGameplayTag ItemTypeTag)
 {

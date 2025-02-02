@@ -3,7 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "ActionFramework/UI/ARPGUserWidget.h"
+#include "GameplayTagContainer.h"
 #include "ItemListPanel.generated.h"
 
 /**
@@ -11,31 +12,38 @@
  */
 class USlot;
 class UUniformGridPanel;
+struct FGameplayTag;
 struct FSlotDisplayInfo;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemListSlotClicked, int32 , ClickedSlotIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemListSlotClickedSignature, FGameplayTag, ItemTypeTag, uint8, SlotIndex);
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemListSlotRequsetItemName, int32, EnteredSlotIndex);
 UCLASS()
-class ACTIONFRAMEWORK_API UItemListPanel : public UUserWidget
+class ACTIONFRAMEWORK_API UItemListPanel : public UARPGUserWidget
 {
 	GENERATED_BODY()
 	
 public:
 	virtual void NativeConstruct() override;
 
-	void InitializeSlot(int32 TotalSlots);
+	UFUNCTION()
+	void InitializeSlot(uint8 Size/*, const TArray<FSlotDisplayInfo>& SlotsInfos, FGameplayTag ItemTypeTag*/);
+
 	void ClearSlots();
 	void UpdateSlot(int32 SlotIndex, const FSlotDisplayInfo& ItemInfo);
-
+	UFUNCTION()
+	void UpdateSlots(const TArray<FSlotDisplayInfo>& SlotsInfos, uint8 Num);
 private:
 	UFUNCTION()
 	void OnSlotClicked(USlot* ClickedSlot);
 
 	UFUNCTION()
 	void OnSlotMouseEntered(USlot* EnteredSlot);
+
+	
+
+	virtual void WidgetPresenterSet() override;
 public:
-	FOnItemListSlotClicked OnItemListSlotClicked;
-	//FOnItemListSlotRequsetItemName OnItemListSlotEntered;
+	FOnItemListSlotClickedSignature OnItemListSlotClickedDelegate;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
@@ -51,4 +59,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	int32 NumColumns {5};  // 그리드의 열 개수
+
+
 };

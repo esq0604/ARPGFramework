@@ -3,6 +3,4 @@
 
 #include "ActionFramework/UI/SlotViewModel.h"
 
-void USlotViewModel::UpdateItemInfo(const FSlotDisplayInfo& ItemInfo)
-{
-}
+

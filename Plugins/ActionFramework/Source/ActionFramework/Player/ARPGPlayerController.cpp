@@ -6,13 +6,15 @@
 #include "GameFramework/PlayerState.h"
 #include "GameplayAbilities/Public/AbilitySystemInterface.h"
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
+#include "ActionFramework/Inventory/InventoryComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Blueprint/UserWidget.h"
-#include "ActionFramework/UI/EscMenuWidget.h"
+#include "ActionFramework/UI/ARPGHUD.h"
 #include "ActionFramework/Camerra/ARPGSpringArmComponent.h"
-#include "ActionFramework/Inventory/InventoryComponent.h"
+#include "GameFramework/PlayerState.h"
+//#include "ActionFramework/Inventory/InventoryComponent.h"
 #include "ActionFramework/ActionFramework.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -27,7 +29,6 @@ AARPGPlayerController::AARPGPlayerController(const FObjectInitializer& ObjectIni
 void AARPGPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 void AARPGPlayerController::OnPossess(APawn* InPawn)
@@ -56,6 +57,8 @@ void AARPGPlayerController::SetupInputComponent()
 	EnhancedInputComp->BindAction(LightAttackAction, ETriggerEvent::Started, this, &AARPGPlayerController::LightAttack);
 	EnhancedInputComp->BindAction(BlockAction, ETriggerEvent::Started, this, &AARPGPlayerController::Block);
 	EnhancedInputComp->BindAction(BlockAction, ETriggerEvent::Completed, this, &AARPGPlayerController::Block);
+	EnhancedInputComp->BindAction(NextWeaponAction, ETriggerEvent::Started, this, &AARPGPlayerController::ChangeNextWeapon);
+	EnhancedInputComp->BindAction(NextToolAction, ETriggerEvent::Started, this, &AARPGPlayerController::ChangeNextTool);
 
 	FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/ActionFramework"), FName("EARPGAbilityInputID"));
 	APlayerState* PS = GetPlayerState<APlayerState>();
@@ -155,30 +158,16 @@ void AARPGPlayerController::TargetLock(const FInputActionValue& Value)
 
 void AARPGPlayerController::ToggleEscWidget(const FInputActionValue& Value)
 {
-	if (!EscMenuWidget && EscMenuWidgetClass)
+	AARPGHUD* Arpghud = GetHUD<AARPGHUD>();
+	if (Arpghud)
 	{
-		EscMenuWidget = CreateWidget<UEscMenuWidget>(GetWorld(), EscMenuWidgetClass);
+		//AARPGHUD*  = Cast<AARPGHUD>(Hud);
 
-		// Delegate 바인딩
-		EscMenuWidget->OnMenuButtonClicked.AddDynamic(this, &AARPGPlayerController::HandleMenuButtonClicked);
-
-		// 처음 생성 시 AddToViewport 호출
-		EscMenuWidget->AddToViewport();
-		EscMenuWidget->SetVisibility(ESlateVisibility::Collapsed);  // 초기 상태는 숨김
-	}
-
-	if (EscMenuWidget)
-	{
-		if (EscMenuWidget->GetVisibility() == ESlateVisibility::Visible)
-		{
-			SetShowMouseCursor(false);
-			EscMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+		if (!Arpghud->EscWidget)
+		{	
+			Arpghud->InitMenuWidget(this, GetPlayerState<APlayerState>(), ASC, nullptr);
 		}
-		else
-		{
-			SetShowMouseCursor(true);
-			EscMenuWidget->SetVisibility(ESlateVisibility::Visible);
-		}
+		Arpghud->ToggleMenuWidget();
 	}
 }
 
@@ -201,6 +190,18 @@ void AARPGPlayerController::Block(const FInputActionValue& Value)
 	SendAbilityLocalInput(Value, static_cast<int32>(EARPGAbilityInputID::Block));
 }
 
+void AARPGPlayerController::ChangeNextWeapon(const FInputActionValue& Value)
+{
+	if (UInventoryComponent* InventoryComp = GetCharacter()->GetComponentByClass<UInventoryComponent>())
+	{
+		InventoryComp->ChangeNextWeapon(Value.GetMagnitude());
+	}
+}
+
+void AARPGPlayerController::ChangeNextTool(const FInputActionValue& Value)
+{
+}
+
 void AARPGPlayerController::HandleMenuButtonClicked(FGameplayTag ButtonTag)
 {
 	if (ButtonTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.OepnInventory"))))
@@ -209,15 +210,15 @@ void AARPGPlayerController::HandleMenuButtonClicked(FGameplayTag ButtonTag)
 		APawn* ControlledPawn = GetPawn(); // PlayerCharacter에 대한 더 명확한 접근
 		if (ControlledPawn)
 		{
-			UInventoryComponent* InventoryComponent = ControlledPawn->FindComponentByClass<UInventoryComponent>();
-			if (InventoryComponent)
-			{
-				UE_LOG(LogTemp, Log, TEXT("InvenComp toggle InvenWidget"));
-				InventoryComponent->ToggleInventoryWidget();
-				ToggleEscWidget(FInputActionValue());
-				SetShowMouseCursor(true);
+			//UInventoryComponent* InventoryComponent = ControlledPawn->FindComponentByClass<UInventoryComponent>();
+			//if (InventoryComponent)
+			//{
+			//	UE_LOG(LogTemp, Log, TEXT("InvenComp toggle InvenWidget"));
+			//	//InventoryComponent->ToggleInventoryWidget();
+			//	ToggleEscWidget(FInputActionValue());
+			//	SetShowMouseCursor(true);
 
-			}
+			//}
 		}
 	}
 	else if (ButtonTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.OpenEquipmentWidget"))))
@@ -226,13 +227,13 @@ void AARPGPlayerController::HandleMenuButtonClicked(FGameplayTag ButtonTag)
 		APawn* ControlledPawn = GetPawn(); // PlayerCharacter에 대한 더 명확한 접근
 		if (ControlledPawn)
 		{
-			UInventoryComponent* InventoryComponent = ControlledPawn->FindComponentByClass<UInventoryComponent>();
-			if (InventoryComponent)
-			{
-				InventoryComponent->ToggleEquipmentWidget();
-				ToggleEscWidget(FInputActionValue());
-				SetShowMouseCursor(true);
-			}
+			//UInventoryComponent* InventoryComponent = ControlledPawn->FindComponentByClass<UInventoryComponent>();
+			//if (InventoryComponent)
+			//{
+			//	//InventoryComponent->ToggleEquipmentWidget();
+			//	ToggleEscWidget(FInputActionValue());
+			//	SetShowMouseCursor(true);
+			//}
 		}
 	}
 	else if (ButtonTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.ExitGame"))))
