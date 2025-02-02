@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "ActionFramework/UI/ARPGUserWidget.h"
 #include "GameplayTagContainer.h"
 #include "ActionFramework/UI/Slot.h"
 #include "EquipmentWidget.generated.h"
@@ -12,49 +12,73 @@
  * 
  */
 class UUniformGridPanel;
+class UItemDescriptionPanel;
 class UButton;
 class USlot;
 class UItemListPanel;
+class USlotWrapper;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquipmentCloseButtonClicked);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipmentRequestItemList, FGameplayTag, ItemTypeTag, UUserWidget*, RequestingWidget);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipmentRequsetItemName, FGameplayTag, ItemTypeTag, int32, SlotIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCategorySlotClickedSignature, FGameplayTag, ItemTypeTag, uint8, SlotIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCategorySlotEnteredSignature, FGameplayTag, ItemTypeTag, uint8, SlotIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRequestEquipItem, FGameplayTag, ItemTypeTag, int32, SlotIndex, int32 , EquipSlot);
 
 
 UCLASS()
-class ACTIONFRAMEWORK_API UEquipmentWidget : public UUserWidget
+class ACTIONFRAMEWORK_API UEquipmentWidget : public UARPGUserWidget
 {
 	GENERATED_BODY()
 	
 public:
 	virtual void NativeConstruct() override;
-	void UpdateItemListPanel(const TArray<FSlotDisplayInfo>& Infos);
-	void UpdateEquipRequestSlot(const FSlotDisplayInfo& Info);
-	void SetCurOpenItemListPanel(FGameplayTag ItemTypeTag);
+	virtual void NativeDestruct() override;
+
+	void ShowItemListPanel();
 private:
+
+	UFUNCTION()
+	void UpdateSlot(FGameplayTag ItemTypeTag, uint8 Index, const FSlotDisplayInfo& SlotInfo);
+
+	UFUNCTION()
+
+	virtual void WidgetPresenterSet();
+
 	UFUNCTION(Category = "UI")
 	void HandleCloseButtonClicked();
 
 	UFUNCTION(Category = "UI")
-	void HandleEquipmentSlotClicked(USlot* ClickedSlot);
+	void OnCategorySlotClicked(USlot* ClickedSlot);
 
 	UFUNCTION(Category = "UI")
-	void HandleItemListSlotClicked(int32 ClickedSlotIndex);
+	void OnCategorySlotEntered(USlot* EnteredSlot);
 
-	UFUNCTION(Category = "UI")
-	void HandleItemListSlotEntered(int32 EnteredSlotIndex);
+	void InitSlotInPanel(UUniformGridPanel* SlotPanel);
 
-	int32 GetSlotIndex(FGameplayTag ItemTypeTag);
+	UFUNCTION()
+	void UpdateSlotNameTextBlock(FGameplayTag ItemTypeTag, uint8 Index);
+
+	UFUNCTION()
+	void UpdateStoreItemNameTextBlock(FGameplayTag ItemTypeTag, uint8 Index);
+
+	USlot* FindSlotAtSlotTagMap(FGameplayTag ItemTypeTag, uint8 Index);
+	//int32 GetSlotIndex(FGameplayTag ItemTypeTag);*/
 
 public:
 	FOnEquipmentCloseButtonClicked OnCloseButtonClicked;
-	FOnEquipmentRequestItemList	OnRequestItemList;
-	FOnRequestEquipItem OnRequestEquipItem;
-	FOnEquipmentRequsetItemName OnRequestItemName;
-private:
+	FOnCategorySlotClickedSignature OnCategorySlotClickedDelegate;
+	FOnCategorySlotEnteredSignature OnCategorySlotEnteredDelegate;
+protected:
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
-	TObjectPtr<UWidget> SlotWrapperPanel;
+	TObjectPtr<UItemListPanel> ItemListPanel;
+
+	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
+	TObjectPtr<UWidget> ItemCategoryPanel;
+
+	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
+	TObjectPtr<UItemDescriptionPanel> ItemInfoPanel;
+
+	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
+	TObjectPtr<UWidget> CharacterDataPanel;
 
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
 	TObjectPtr<UUniformGridPanel> WeaponPanel;
@@ -63,42 +87,41 @@ private:
 	TObjectPtr<UUniformGridPanel> ToolPanel;
 
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
-	TObjectPtr<USlot> ArmorSlot;
+	TObjectPtr<UUniformGridPanel> ArmorPanel; 
 
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
-	TObjectPtr<USlot> GlovesSlot;
+	TObjectPtr<USlot> ArmorSlot;
 
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
 	TObjectPtr<USlot> HelmetSlot;
 
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
-	TObjectPtr<USlot> ShoesSlot;
+	TObjectPtr<USlot> GloveSlot;
 
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
+	TObjectPtr<USlot> ShoesSlot;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (BindWidget), Category = "UI")
 	TObjectPtr<UButton> CloseButton;
 
 	// Slot-Tag ╦егн©К TMap
-	TMap<USlot*, FGameplayTag> SlotTagMap;
+	TMap<FGameplayTag, TMap<uint8 ,TObjectPtr<USlot>>> SlotTagMap;
 
-	
 	TMap<FGameplayTag, UUniformGridPanel*> TagPanelMap;
-
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	int8 NumWeaponSlot{ 3 };
-
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	int8 NumToolSlot{ 6 };
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> SlotWidgetClass;
 
-	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
-	TObjectPtr<UItemListPanel> ItemListPanel;
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	int32 SlotCapacity{ 25 };
 
 	TObjectPtr<USlot> EquipRequestSlot;
 	
+	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
+	TObjectPtr<UTextBlock> SlotName_TextBlock;
+
+	UPROPERTY(EditDefaultsOnly, meta = (BindWidget), Category = "UI")
+	TObjectPtr<UTextBlock> StoreItemName_TextBlock;
 
 	FGameplayTag CurOpenItemListPanel;
 

@@ -12,7 +12,7 @@ class AEquipItem;
 class UInventoryWidget;
 class UEquipmentWidget;
 class UQuickSlotWidget;
-class UEquipmentViewModel;
+class UEquipmentPresenter;
 
 //enum class EWeaponType : uint8;
 
@@ -29,7 +29,9 @@ public:
 	uint8 CurUsingIndex = 0;
 };
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEquipmentChangeDelegate,FGameplayTag, Tag, uint8 , Index, const UItemBaseDataAsset* , EquippedItem);
+
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) ,BlueprintType ,Blueprintable)
 class ACTIONFRAMEWORK_API UInventoryComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -37,72 +39,69 @@ class ACTIONFRAMEWORK_API UInventoryComponent : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	UInventoryComponent();
-//	virtual void InitializeComponent() override;
+	//	virtual void InitializeComponent() override;
 
-	UFUNCTION(Category = "InventoryComponent")
-	void ToggleInventoryWidget();
-		//
-	UFUNCTION(Category = "InventoryComponent")
-	void ToggleEquipmentWidget();
-
-	UFUNCTION(Category = "InventoryComponent")
-	void ToggleQuickSlotWidget();
-
+	const TArray<TObjectPtr<UItemBaseDataAsset>>* GetInventoryItems(FGameplayTag ItemType);
+	const TArray<TObjectPtr<UItemBaseDataAsset>>* GetEquipmentItems(FGameplayTag ItemType);
+	const UItemBaseDataAsset* GetInventoryItem(FGameplayTag ItemType, uint8 Index);
+	const UItemBaseDataAsset* GetEquipmentItem(FGameplayTag ItemType, uint8 Index);
+	bool IsItemEquipped(UItemBaseDataAsset* Item);
 	UItemBaseDataAsset* GetCurrentEquipWeaponData();
-
+	
+	FGameplayTagContainer GetAllItemType() { return ItemTypeTags;}
+	uint8 GetEquipmentItemCapaicty(FGameplayTag ItemType); 
+	uint8 GetInventoryItemContainerSize() { return ItemContainerSize; }
+	void ChangeNextWeapon(float ChangedIndex);
+	void EquipItemFromInventoryItemContainer(FGameplayTag ItemTypeTag, uint8 RequsetItemIndex, uint8 UpdateSlotIndex);
+	void UnEquipItem(FGameplayTag ItemTypeTag, uint8 RequsetItemIndex, uint8 UpdateSlotIndex);
+	bool IsEquippedItem(FGameplayTag ItemTypeTag, uint8 Index);
+protected:
 //	// Called when the game starts
 	virtual void BeginPlay() override;
 
 private:
 	void AddStartingItem();
 	void AddItemToItemContainer(const UItemBaseDataAsset* AddedItem);
-	void AddItemToQuickSlotWidget(const UItemBaseDataAsset* AddedItem);
-	void EquipItem(const UItemBaseDataAsset* AddedItem);
-	void UnEquipItem(const UItemBaseDataAsset* AddedItem);
-	void UseItem(const UItemBaseDataAsset* AddedItem);
-	void SetMouseCursorVisibility(bool bIsVisible);
 
 	UFUNCTION(Category = "InventoryComponent")
 	void EquipUnEquipItemToEquipment(FGameplayTag ItemType, int32 ContainerIndex, int32 EquipIndex);
-	UFUNCTION(Category = "InventoryComponent")
-	void UpdateItemList(FGameplayTag ItemTypeTag , UUserWidget* RequestingWidget);
 
-	UFUNCTION(Category = "InventoryComponent")
-	void UpdateEquipmentWiget(FGameplayTag ItemTypeTag);
-private:
-	UPROPERTY(EditDefaultsOnly, Category = "InventoryComponent | UI")
-	TSubclassOf<UUserWidget> InventoryWidgetClass;
+public:
+	FOnEquipmentChangeDelegate OnEquipmentChange;
+protected:
 
-	TObjectPtr<UInventoryWidget> InventoryWidget;
-
-	UPROPERTY(EditDefaultsOnly, Category = "InventoryComponent | UI")
-	TSubclassOf<UUserWidget> EquipmentWidgetClass;
-
-	TObjectPtr<UEquipmentWidget> EquipmentWidget;
-
-	UPROPERTY(EditDefaultsOnly, Category = "InventoryComponent | UI")
-	TSubclassOf<UUserWidget> QuickSlotWidgetClass;
-
-	TObjectPtr<UQuickSlotWidget> QuickSlotWidget;
-
-	UPROPERTY(EditDefaultsOnly , Category = "InventoryComponent | StartingItems")
+	UPROPERTY(EditDefaultsOnly,Category = "InventoryComponent | Items")
 	TArray<TObjectPtr<UItemBaseDataAsset>>	StartingItems;
 
-	TMap<FGameplayTag, TArray<TObjectPtr<UItemBaseDataAsset>>> ItemContainer;
-	TMap<FGameplayTag, TArray<TObjectPtr<UItemBaseDataAsset>>> CurEquipedItemData;
+	TMap<FGameplayTag, TArray<TObjectPtr<UItemBaseDataAsset>>> InventoryItemContainer;
+
+	TMap<FGameplayTag, TArray<TObjectPtr<UItemBaseDataAsset>>> EquipmentItemContainer;
 
 	TMap<FGameplayTag, TMap<int32, int32>> InventoryToQuickSlotMap;
-	TMap<FGameplayTag, TMap<int32, int32>> InventoryToEquipSlotMap;
-	TMap<FGameplayTag, int32> CurrentQuickSlotIndices;
-	FGameplayTag CurrentUsingQuickSlotType;
 
-	
-	uint8 CurUsingWeaponIndex{ 0 };
+	TMap<FGameplayTag, TMap<int32, int32>> InventoryToEquipSlotMap;
 
 	UPROPERTY(EditDefaultsOnly, Category = "InventoryComponent")
+	TMap<FGameplayTag, int32> CurrentQuickSlotIndices;
+	UPROPERTY(EditDefaultsOnly, Category = "InventoryComponent")
+	FGameplayTag CurrentUsingQuickSlotType;
+
+	TMap<FGameplayTag, uint8> CurUsingTagEquipmentContainerIndexMap;
+
+	UPROPERTY(EditDefaultsOnly, Category = "InventoryComponent | Items | Capacity")
 	int8 ItemContainerSize{ 25 };
 
-	//TObjectPtr<UEquipmentViewModel> EquipmentViewModel;
+	UPROPERTY(EditDefaultsOnly, Category = "InventoryComponent | Items | Capacity")
+	TMap<FGameplayTag, uint8> EquipmentItemContainerCapacity;
+
+	/*UPROPERTY(EditDefaultsOnly, Category = "InventoryComponent | Items | Capacity")
+	uint8 EquipWeaponCapacity{ 3 };
+
+	UPROPERTY(EditDefaultsOnly, Category = "InventoryComponent | Items | Capacity")
+	uint8 EquipToolCapacity{ 6 };*/
+
+	UPROPERTY(EditDefaultsOnly, Category = "InventoryComponent | Items")
+	FGameplayTagContainer ItemTypeTags;
 
 //
 //

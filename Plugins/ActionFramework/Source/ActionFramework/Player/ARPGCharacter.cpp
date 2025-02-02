@@ -10,6 +10,8 @@
 #include "ActionFramework/Animation/ARPGAnimInstance.h"
 #include "ActionFramework/Components/TargetingComponent.h"
 #include "ActionFramework/AbilitySystem/ARPGAttributeSet.h"
+#include "ActionFramework/UI/ARPGHUD.h"
+#include "ActionFramework/Player/ARPGPlayerState.h"
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
@@ -44,16 +46,16 @@ AARPGCharacter::AARPGCharacter()
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
-	SpringArmComp = CreateDefaultSubobject<UARPGSpringArmComponent>(TEXT("ARPGSpringArm"));
+	TargetingCameraSpringArm = CreateDefaultSubobject<UARPGSpringArmComponent>(TEXT("ARPGSpringArm"));
 	
-	SpringArmComp->SetupAttachment(RootComponent);
-	SpringArmComp->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
+	TargetingCameraSpringArm->SetupAttachment(RootComponent);
+	TargetingCameraSpringArm->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
 
 	//SpringArmComp->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	FollowCamera->SetupAttachment(TargetingCameraSpringArm, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
@@ -61,7 +63,7 @@ AARPGCharacter::AARPGCharacter()
 
 	HitReactionComponent = CreateDefaultSubobject<UHitReactionComponent>(TEXT("HitReactionComponent"));
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryCoponent"));
-
+	//InventoryComponent->Out
 	BaseEyeHeight = 74.0f;
 
 }
@@ -77,26 +79,35 @@ void AARPGCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (InventoryComponent)
+	{
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		AARPGHUD* HUD = Cast<AARPGHUD>(PC->GetHUD());
+
+		HUD->InitEquipmentWidget(PC, GetPlayerState(), AbilitySystemComponent, AttributeSet, InventoryComponent);
+	}
 }
 
 void AARPGCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	IAbilitySystemInterface* ASCInterface = nullptr;
-	if (GetPlayerState())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GetPlayerState %s"), *GetPlayerState()->GetName());
-		ASCInterface = Cast<IAbilitySystemInterface>(GetPlayerState());
+	UE_LOG(LogTemp, Warning, TEXT("PossessedBy"));
 
-	}
-	if (ASCInterface != nullptr)
-	{
-		UAbilitySystemComponent* ASC = ASCInterface->GetAbilitySystemComponent();
-		if (ASC)
-		{
-			ASC->InitAbilityActorInfo(this, this);
-			
+	IAbilitySystemInterface* ASCInterface = nullptr;
+	APlayerController* PC= Cast<APlayerController>(GetController());
+	AARPGPlayerState* PS = GetPlayerState<AARPGPlayerState>();
+	AARPGHUD* HUD = Cast<AARPGHUD>(PC->GetHUD());
+
+
+
+	InitAbilityActorInfo();
+		
+			if (PC)
+			{
+				HUD->InitOverlayWidget(PC, GetPlayerState(), AbilitySystemComponent, AttributeSet);
+
+			}
 			if (GetMesh())
 			{	
 				if (GetMesh()->GetAnimInstance())
@@ -104,7 +115,7 @@ void AARPGCharacter::PossessedBy(AController* NewController)
 					UARPGAnimInstance* AnimInstance = Cast<UARPGAnimInstance>(GetMesh()->GetAnimInstance());
 					if (AnimInstance)
 					{
-						AnimInstance->InitializeWithAbilitySystem(ASC);
+						AnimInstance->InitializeWithAbilitySystem(AbilitySystemComponent);
 					}
 				}
 				else
@@ -116,29 +127,29 @@ void AARPGCharacter::PossessedBy(AController* NewController)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("GetMesh nullptr"));
 			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Player ASC nullptr"));
-		}
-	}
+	
 }
+
+//void AARPGCharacter::OnRep_PlayerState()
+//{
+//	//InitAbilityActorInfo();
+//}
 
 void AARPGCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
-	if (SpringArmComp)
+	if (TargetingCameraSpringArm)
 	{
-		if (SpringArmComp->IsCameraLockedToTarget())
+		if (TargetingCameraSpringArm->IsCameraLockedToTarget())
 		{
 			//UE_LOG(LogTemp, Warning, TEXT("Target Set , NewRot"));
 
 			// Vector from player to target
-			FVector TargetVect = SpringArmComp->CameraTarget->GetComponentLocation() - SpringArmComp->GetComponentLocation();
+			FVector TargetVect = TargetingCameraSpringArm->CameraTarget->GetComponentLocation() - TargetingCameraSpringArm->GetComponentLocation();
 			FRotator TargetRot = TargetVect.GetSafeNormal().Rotation();
 			FRotator CurrentRot = GetControlRotation();
-			FRotator InterpRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaSeconds, SpringArmComp->LockonControlRotationRate);
+			FRotator InterpRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaSeconds, TargetingCameraSpringArm->LockonControlRotationRate);
 
 			FRotator NewRot = FRotator(GetActorRotation().Pitch, InterpRot.Yaw, GetActorRotation().Roll);
 			// Update control rotation to face target
@@ -150,6 +161,15 @@ void AARPGCharacter::Tick(float DeltaSeconds)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SrpingArm nullptr"));
 	}
+}
+
+void AARPGCharacter::InitAbilityActorInfo()
+{
+	AARPGPlayerState* PS = GetPlayerState<AARPGPlayerState>();
+	
+	PS->GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
+	AbilitySystemComponent = PS->GetAbilitySystemComponent();
+	AttributeSet = PS->GetAttributeSet();
 }
 
 AActor* AARPGCharacter::GetEquippedWeapon_Implementation()

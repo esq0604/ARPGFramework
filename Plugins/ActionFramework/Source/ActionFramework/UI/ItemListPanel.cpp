@@ -3,6 +3,9 @@
 
 #include "ActionFramework/UI/ItemListPanel.h"
 #include "ActionFramework/UI/Slot.h"
+#include "ActionFramework/UI/EquipmentPresenterMediator.h"
+#include "ItemListPaenlPresenter.h"
+#include "EquipmentPresenter.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 
@@ -10,7 +13,7 @@ void UItemListPanel::NativeConstruct()
 {
 }
 
-void UItemListPanel::InitializeSlot(int32 TotalSlots)
+void UItemListPanel::InitializeSlot(uint8 Size)
 {
     if (!SlotWidgetClass || !UniformGridPanel)
     {
@@ -22,19 +25,22 @@ void UItemListPanel::InitializeSlot(int32 TotalSlots)
     SlotPool.Empty();
     UniformGridPanel->ClearChildren();
 
-    for (int32 i = 0; i < TotalSlots; ++i)
+    for (uint8 i = 0; i < Size; i++)
     {
+
         USlot* NewSlotWidget = CreateWidget<USlot>(this, SlotWidgetClass);
         if (NewSlotWidget)
         {
+            //NewSlotWidget->SetSlotType(ItemTypeTag);
+            NewSlotWidget->SlotIndex = i;
             NewSlotWidget->OnSlotMouseEnter.AddDynamic(this, &UItemListPanel::OnSlotMouseEntered);
-            NewSlotWidget->OnSlotClicked.AddDynamic(this, &UItemListPanel::OnSlotClicked);
             SlotPool.Add(NewSlotWidget);
             UniformGridPanel->AddChildToUniformGrid(NewSlotWidget,(i / NumColumns),(i % NumColumns));
         }
     }
 
-    UE_LOG(LogTemp, Log, TEXT("Initialized %d slots."), TotalSlots);
+    //if(SlotsInfos.)
+    //UpdateSlots(SlotsInfos,Size);
 }
 
 void UItemListPanel::ClearSlots()
@@ -43,7 +49,7 @@ void UItemListPanel::ClearSlots()
     {
         if (USlot* PanelSlot = Cast<USlot>(SlotWidget))
         {
-            PanelSlot->ClearItemInfo();  // 슬롯 데이터 초기화
+            PanelSlot->ClearSlot();  // 슬롯 데이터 초기화
         }
     }
 }
@@ -55,43 +61,74 @@ void UItemListPanel::UpdateSlot(int32 SlotIndex, const FSlotDisplayInfo& ItemInf
         UUserWidget* SlotWidget = SlotPool[SlotIndex];
         if (USlot* PanelSlot = Cast<USlot>(SlotWidget))
         {
-            PanelSlot->UpdateItemInfo(ItemInfo);  // 슬롯 데이터 갱신
+            PanelSlot->UpdateSlot(ItemInfo);  
+            if (ItemInfo.Icon!=nullptr && !ItemInfo.Name.EqualTo(FText::FromString("-"))) //아이템을 슬롯에 저장하고 있지 않은 경우
+            {
+                if (!PanelSlot->OnSlotClicked.IsBound())
+                {
+                    PanelSlot->OnSlotClicked.AddDynamic(this, &UItemListPanel::OnSlotClicked);
+                }
+            }
+            else
+            {
+                if (PanelSlot->OnSlotClicked.IsBound())
+                {
+                    PanelSlot->OnSlotClicked.RemoveDynamic(this, &UItemListPanel::OnSlotClicked);
+                }
+            }
         }
     }
 }
 
 void UItemListPanel::OnSlotClicked(USlot* ClickedSlot)
 {
-    if (!ClickedSlot)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("ClickedSlot is null."));
-        return;
-    }
-
     // SlotPool에서 ClickedSlot의 인덱스를 검색
-    int32 SlotIndex = SlotPool.IndexOfByKey(ClickedSlot);
-
-    if (SlotIndex != INDEX_NONE)  // 유효한 인덱스 확인
+    if (UItemListPaenlPresenter* ItemListPanelPresenter = Cast<UItemListPaenlPresenter>(GetPresenter()))
     {
-        UE_LOG(LogTemp, Log, TEXT("Clicked Slot Index: %d"), SlotIndex);
+        
+        int32 SlotIndex = SlotPool.IndexOfByKey(ClickedSlot);
 
-        // 슬롯 클릭 이벤트를 인덱스와 함께 브로드캐스트
-        OnItemListSlotClicked.Broadcast(SlotIndex);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("ClickedSlot not found in SlotPool."));
+        if (SlotIndex != INDEX_NONE)  // 유효한 인덱스 확인
+        {
+            this->SetVisibility(ESlateVisibility::Collapsed);
+            OnItemListSlotClickedDelegate.Broadcast(ItemListPanelPresenter->GetCurItemListType(), ClickedSlot->SlotIndex);
+        }
     }
 }
 
 void UItemListPanel::OnSlotMouseEntered(USlot* EnteredSlot)
 {
-    if (!EnteredSlot)
+    // SlotPool에서 ClickedSlot의 인덱스를 검색
+    int32 SlotIndex = SlotPool.IndexOfByKey(EnteredSlot);
+
+    if (SlotIndex != INDEX_NONE)  // 유효한 인덱스 확인
     {
-
-        int32 SlotIndex = SlotPool.IndexOfByKey(EnteredSlot);
-
-        //OnItemListSlotEntered.BroadCast(SlotIndex);
-        return;
+        if (UItemListPaenlPresenter* ItemListPanelPresenter = Cast<UItemListPaenlPresenter>(GetPresenter()))
+        {
+            FEquipmentSlotClickedMessage Msg(ItemListPanelPresenter->GetCurItemListType(), SlotIndex);
+            
+            ItemListPanelPresenter->OnItemListSlotEntered(Msg);
+        }
+    
+        /*
+        UEquipmentPresenter* EquipPresenter = Cast<UEquipmentPresenter>(GetPresenter());
+        EquipPresenter->OnItemListSlotEntered(EnteredSlot->GetSlotType(), SlotIndex);*/       
     }
+}
+
+void UItemListPanel::UpdateSlots(const TArray<FSlotDisplayInfo>& SlotsInfos , uint8 Num)
+{
+    for (int i = 0; i < SlotsInfos.Num(); i++)
+    {
+        UpdateSlot(i, SlotsInfos[i]);
+    }
+}
+
+void UItemListPanel::WidgetPresenterSet()
+{
+
+    //UEquipmentPresenter* EquipPresenter = Cast<UEquipmentPresenter>(GetPresenter());
+
+    //ModelDataChangeEvent
+   // EquipPresenter->OnEquipItemEvent.AddDynamic(this, &UEquipmentWidget::UpdateSlot);
 }

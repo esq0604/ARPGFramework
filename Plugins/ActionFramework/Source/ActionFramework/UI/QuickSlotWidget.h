@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "ARPGUserWidget.h"
 #include "QuickSlotWidget.generated.h"
 
 /**
@@ -11,7 +11,7 @@
  */
 class USlot;
 UCLASS()
-class ACTIONFRAMEWORK_API UQuickSlotWidget : public UUserWidget
+class ACTIONFRAMEWORK_API UQuickSlotWidget : public UARPGUserWidget
 {
 	GENERATED_BODY()
 	

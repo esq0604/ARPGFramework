@@ -41,6 +41,9 @@ protected:
 
 	void Block(const FInputActionValue& Value);
 
+	void ChangeNextWeapon(const FInputActionValue& Value);
+	void ChangeNextTool(const FInputActionValue& Value);
+
 	UFUNCTION()
 	void HandleMenuButtonClicked(FGameplayTag ButtonTag);
 
@@ -76,12 +79,13 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = Input)
 	UInputAction* BlockAction{ nullptr };
 
+	UPROPERTY(EditDefaultsOnly, Category = Input)
+	UInputAction* NextWeaponAction{ nullptr };
 
-	UPROPERTY(EditDefaultsOnly, Category = "ARPGController")
-	TSubclassOf<UUserWidget> EscMenuWidgetClass;
-	TObjectPtr<UEscMenuWidget> EscMenuWidget;
-	
-	
+	UPROPERTY(EditDefaultsOnly, Category = Input)
+	UInputAction* NextToolAction{ nullptr };
+
+
 	UPROPERTY(EditDefaultsOnly, Category = "ARPGController")
 	TObjectPtr<UInputMappingContext> InputMapping;
 

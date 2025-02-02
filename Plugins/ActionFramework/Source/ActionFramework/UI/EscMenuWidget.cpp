@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ActionFramework/UI/EscMenuWidget.h"
+#include "ActionFramework/UI/EscPresenter.h"
 #include "Components/Button.h"
 #include "EscMenuWidget.h"
 
@@ -24,20 +25,46 @@ void UEscMenuWidget::NativeConstruct()
     }
 }
 
+void UEscMenuWidget::NativeDestruct()
+{
+    if (InventoryButton)
+    {
+        InventoryButton->OnClicked.RemoveDynamic(this, &UEscMenuWidget::HandleInventoryButtonClicked);
+    }
+
+    if (EquipmentButton)
+    {
+        EquipmentButton->OnClicked.RemoveDynamic(this, &UEscMenuWidget::HandleEquipmentButtonClicked);
+    }
+
+    if (ExitButton)
+    {
+        ExitButton->OnClicked.RemoveDynamic(this, &UEscMenuWidget::HandleExitButtonClicked);
+    }
+}
+
+void UEscMenuWidget::WidgetPresenterSet()
+{
+   // UEscPresenter* EscPresenter = Cast<UEscPresenter>(GetPresenter());
+}
+
 void UEscMenuWidget::HandleInventoryButtonClicked()
 {
-	OnMenuButtonClicked.Broadcast(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.OepnInventoryWidget")));
+    UEscPresenter* EscPresenter = Cast<UEscPresenter>(GetPresenter());
+    SetVisibility(ESlateVisibility::Collapsed);
+    //EscPresenter->
+	//OnMenuButtonClicked.Broadcast(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.OepnInventoryWidget")));
 
 }
 
 void UEscMenuWidget::HandleEquipmentButtonClicked()
 {
 	OnMenuButtonClicked.Broadcast(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.OpenEquipmentWidget")));
-
+    SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UEscMenuWidget::HandleExitButtonClicked()
 {
 	OnMenuButtonClicked.Broadcast(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.ExitGame")));
-
+    SetVisibility(ESlateVisibility::Collapsed);
 }

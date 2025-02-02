@@ -32,7 +32,7 @@ void AWeaponItem::Init(const UItemBaseDataAsset* InData)
 	UItemBaseDataAsset* nonConstItem = const_cast<UItemBaseDataAsset*>(InData);
 	UEquipBaseItemDataAsset* EquipData = Cast<UEquipBaseItemDataAsset>(nonConstItem);
 
-	AActor* OwnerActor = GetOwner();
+	//AActor* OwnerActor = GetOwner();
 
 }
 
@@ -56,7 +56,6 @@ void AWeaponItem::EquipMesh(const UItemBaseDataAsset* InData)
 
 	if (EquipData && MeshComp)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Equip Data -> MeshComp ReSize "));
 		FName WepaonStartSocketName = EquipData->WeaponData.WeaponSocketTraceName.TraceStartSocketName;
 		FName WepaonEndSocketName = EquipData->WeaponData.WeaponSocketTraceName.TraceEndSocketName;
 
@@ -73,8 +72,6 @@ void AWeaponItem::EquipMesh(const UItemBaseDataAsset* InData)
 		WeaponCollisionComponent->SetBoxExtent(FVector(LocalBoundsMax.X, BoxExtendY, LocalBoundsMax.Z));
 		WeaponCollisionComponent->SetRelativeLocation(FVector(0.f, BoxCenterY, 0.f));
 		WeaponCollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		//WeaponCollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AWeaponItem::OnWeaponOverlap);
-		//WeaponCollisionComponent->OnComponentEndOverlap.AddDynamic(this, &AWeaponItem::OnWeaponEndOverlap);
 	}
 
 
@@ -83,7 +80,6 @@ void AWeaponItem::EquipMesh(const UItemBaseDataAsset* InData)
 
 void AWeaponItem::EquipAbility(const UItemBaseDataAsset* InData)
 {
-	UE_LOG(LogTemp, Warning, TEXT("EquipAbility "));
 
 	const IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(GetOwner());
 	UAbilitySystemComponent* ASC = nullptr;
@@ -96,7 +92,6 @@ void AWeaponItem::EquipAbility(const UItemBaseDataAsset* InData)
 	if (!EquipData)
 		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("Assing ASC , EquipData"));
 	ASC = ASI->GetAbilitySystemComponent();
 	
 
@@ -104,32 +99,31 @@ void AWeaponItem::EquipAbility(const UItemBaseDataAsset* InData)
 	{
 		for (auto& Ability : EquipData->WeaponData.Abilties)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("EquipAbility aaaaa "));
 			UARPGAbility* AbilityCDO = Ability->GetDefaultObject<UARPGAbility>();
 			
 			FGameplayAbilitySpec AbilitySpec(AbilityCDO, 1, static_cast<int32>(AbilityCDO->InputID), this);
 			ASC->GiveAbility(AbilitySpec);
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("EndGiveAbility "));
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ASC nullptr "));
-
 	}
 }
 
 void AWeaponItem::UnEquipMesh(const UItemBaseDataAsset* InData)
 {
-	USkeletalMeshComponent* MeshComp = Cast<USkeletalMeshComponent>(GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+	if (GetOwner())
+	{
+		USkeletalMeshComponent* MeshComp = Cast<USkeletalMeshComponent>(GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
 
-	UItemBaseDataAsset* nonConstItem = const_cast<UItemBaseDataAsset*>(InData);
-	UEquipBaseItemDataAsset* EquipData = Cast<UEquipBaseItemDataAsset>(nonConstItem);
+		UItemBaseDataAsset* nonConstItem = const_cast<UItemBaseDataAsset*>(InData);
+		UEquipBaseItemDataAsset* EquipData = Cast<UEquipBaseItemDataAsset>(nonConstItem);
 
 
-	MeshComp->LinkAnimClassLayers(EquipData->WeaponData.UnEquippedAnimSet);
-
+		MeshComp->LinkAnimClassLayers(EquipData->WeaponData.UnEquippedAnimSet);
+	}
 }
 
 void AWeaponItem::UnEquipAbility()

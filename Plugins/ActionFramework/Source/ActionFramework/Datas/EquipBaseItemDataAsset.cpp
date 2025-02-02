@@ -8,7 +8,7 @@ void UEquipBaseItemDataAsset::Use()
 {
 }
 
-void UEquipBaseItemDataAsset::Equip()
+bool UEquipBaseItemDataAsset::Equip()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Equip In ItemDataAsset"));
 	FActorSpawnParameters SpawnInfo;
@@ -24,10 +24,14 @@ void UEquipBaseItemDataAsset::Equip()
 		EquipItem->Init(this);
 		EquipItem->EquipMesh(this);
 		EquipItem->EquipAbility(this);
+
+		return true;
 	}
+
+	return false;
 }
 
-void UEquipBaseItemDataAsset::UnEquip()
+bool UEquipBaseItemDataAsset::UnEquip()
 {
 
 	AEquipItem* EquipItem = Cast<AEquipItem>(SpawnedActor);
@@ -37,10 +41,13 @@ void UEquipBaseItemDataAsset::UnEquip()
 	if (SpawnedActor->Destroy())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("UnEquip Destory Succed Spawned Actor "));
+		return true;
 	}
 	else
 	{
 
 		UE_LOG(LogTemp, Warning, TEXT("UnEquip Destory Fail Spawned Actor "));
 	}
+
+	return false;
 }

@@ -59,8 +59,8 @@ class ACTIONFRAMEWORK_API UEquipBaseItemDataAsset : public UItemBaseDataAsset , 
 public:
 	virtual void Use() override;
 
-	virtual void Equip() override;
-	virtual void UnEquip() override;
+	virtual bool Equip() override;
+	virtual bool UnEquip() override;
 
 public:
 	UPROPERTY(EditAnywhere, Category = "EquipData", meta = (EditCondition = "bIsWeapon"))

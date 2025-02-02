@@ -200,11 +200,10 @@ void UARPGSpringArmComponent::AdjustCameraBasedOnTargetDistance(UTargetingCompon
 	{
 		//float dist = GetOwner()->GetDistanceTo(NewTargetComponent->GetOwner());
 		float dist = (CameraTarget->GetComponentLocation() - GetComponentLocation()).Size();
-		if (SpringArmZOffset && SpringArmLenght && CameraRotation)
+		if (SpringArmZOffsetByTargetDist && SpringArmLenghtByTargetDist && CameraRotationByTargetDist)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("SpringArmZOffSet %f , ArmLenght, %f"),SpringArmZOffset->GetFloatValue(dist), SpringArmLenght->GetFloatValue(dist));
-			TargetOffset = { 0.f,-25.f,SpringArmZOffset->GetFloatValue(dist) };
-			TargetArmLength = SpringArmLenght->GetFloatValue(dist);
+			TargetOffset = { 0.f,-25.f,SpringArmZOffsetByTargetDist->GetFloatValue(dist) };
+			TargetArmLength = SpringArmLenghtByTargetDist->GetFloatValue(dist);
 
 			TArray<USceneComponent*> ChildComps;
 			GetChildrenComponents(false, ChildComps);
@@ -213,9 +212,7 @@ void UARPGSpringArmComponent::AdjustCameraBasedOnTargetDistance(UTargetingCompon
 				UCameraComponent* CameraComp = Cast<UCameraComponent>(comp);
 				if (CameraComp)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("CameraRot %f "), CameraRotation->GetFloatValue(dist));
-
-					CameraComp->SetRelativeRotation({ CameraRotation->GetFloatValue(dist),0.f,0.f });
+					CameraComp->SetRelativeRotation({ CameraRotationByTargetDist->GetFloatValue(dist),0.f,0.f });
 				}
 			}
 		}

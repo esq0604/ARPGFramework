@@ -2,7 +2,7 @@
 
 
 #include "ActionFramework/UI/Slot.h"
-#include "ActionFramework/UI/SlotViewModel.h"
+#include "ActionFramework/UI/EquipmentPresenter.h"
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 
@@ -14,21 +14,35 @@ void USlot::NativeConstruct()
 	//BackgroundIcon->SetBrushFromTexture(BackgroundIconTexture);
 }
 
-void USlot::ClearItemInfo()
+void USlot::ClearSlot()
 {
 	Icon->SetBrushFromTexture(nullptr);
-	AmountText->SetText(FText::GetEmpty());
+	//AmountText->SetText(FText::GetEmpty());
 	//ItemName->SetText(FText::GetEmpty());
 }
 
-void USlot::UpdateItemInfo(const FSlotDisplayInfo& ItemInfo)
+void USlot::UpdateSlot(const FSlotDisplayInfo& ItemInfo)
 {
 	//CurrentItemInfo = ItemInfo;  // 데이터 저장
 
 	// UI 업데이트
 	Icon->SetBrushFromTexture(ItemInfo.Icon);
 	AmountText->SetText(FText::AsNumber(ItemInfo.Count));
-	//ItemNameText->SetText(ItemInfo.ItemName);
+	StoreItemText = ItemInfo.Name;
+
+	if (ItemInfo.bIsEquipped)
+	{
+		EquipCheck->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		EquipCheck->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void USlot::SetSlotType(FGameplayTag TypeTag)
+{
+	SlotType = TypeTag;
 }
 
 FReply USlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -45,13 +59,11 @@ FReply USlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointe
 void USlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
-	UE_LOG(LogTemp, Warning, TEXT("MouseEnter"));
+
 	OnSlotMouseEnter.Broadcast(this);
 }
 
 void USlot::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
-	Super::NativeOnMouseLeave(InMouseEvent);
-	UE_LOG(LogTemp, Warning, TEXT("MouseLeave"));
-	OnSlotMouseEnter.Broadcast(this);
+	//Super::NativeOnMouseLeave(InMouseEvent);
 }
