@@ -15,6 +15,9 @@ class UAbilitySystemComponent;
 class UHitReactionComponent;
 class UGameplayEffect;
 class AWeaponItem;
+class UBehaviorTree;
+class AARPGAIController;
+
 UCLASS()
 class ACTIONFRAMEWORK_API AARPGEnemy : public ACharacter , public ICombatable, public IAbilitySystemInterface
 {
@@ -23,6 +26,8 @@ class ACTIONFRAMEWORK_API AARPGEnemy : public ACharacter , public ICombatable, p
 public:
 	// Sets default values for this character's properties
 	AARPGEnemy();
+
+	virtual void PossessedBy(AController* NewController) override;
 
 	virtual AActor* GetEquippedWeapon_Implementation() override;
 
@@ -62,5 +67,10 @@ private:
 	UPROPERTY(EditDefaultsOnly,Category="ARPGEnemy")
 	TObjectPtr<UHitReactionComponent> HitReactionComponent;
 
+	UPROPERTY(EditDefaultsOnly, Category="AI")
+	TObjectPtr<UBehaviorTree> BehaviorTree;
+
+	UPROPERTY()
+	TObjectPtr<AARPGAIController> ARPGAIController;
 
 };

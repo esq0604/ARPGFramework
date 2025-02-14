@@ -50,6 +50,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> EquipmentWidgetClass;
+	UPROPERTY()
 	TObjectPtr<UARPGUserWidget> EquipmentWidget;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -58,6 +59,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> OverlayWidgetClass;
+	UPROPERTY()
 	TObjectPtr<UARPGUserWidget> OverlayWidget;
 
 	UPROPERTY(EditDefaultsOnly)

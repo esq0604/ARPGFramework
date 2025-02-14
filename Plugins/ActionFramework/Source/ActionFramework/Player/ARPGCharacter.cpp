@@ -12,7 +12,7 @@
 #include "ActionFramework/AbilitySystem/ARPGAttributeSet.h"
 #include "ActionFramework/UI/ARPGHUD.h"
 #include "ActionFramework/Player/ARPGPlayerState.h"
-#include "GameplayAbilities/Public/AbilitySystemComponent.h"
+#include "ActionFramework/AbilitySystem/ARPGAbilitySystemComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerState.h"
@@ -102,7 +102,8 @@ void AARPGCharacter::PossessedBy(AController* NewController)
 
 
 	InitAbilityActorInfo();
-		
+	AddCharacterAbilities();
+
 			if (PC)
 			{
 				HUD->InitOverlayWidget(PC, GetPlayerState(), AbilitySystemComponent, AttributeSet);
@@ -204,5 +205,12 @@ UAbilitySystemComponent* AARPGCharacter::GetAbilitySystemComponent() const
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Player ASC nullptr"));
 	return nullptr;
+}
+
+void AARPGCharacter::AddCharacterAbilities()
+{
+	UARPGAbilitySystemComponent* ASC  = CastChecked<UARPGAbilitySystemComponent>(AbilitySystemComponent);
+	ASC->AddCharacterAbilities(StartAbilities);
+
 }
 

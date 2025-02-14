@@ -12,6 +12,32 @@ class UAbilitySystemComponent;
 /**
  * 
  */
+UENUM(BlueprintType)
+namespace EAnimation
+{
+	enum Direction : int
+	{
+		Foward,
+		Backward,
+		Left,
+		Right
+	};
+}
+
+USTRUCT(BlueprintType)
+struct FForWayDirectionAnimation
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAnimSequence> Forward;
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAnimSequence> Backward;
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAnimSequence> Left;
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAnimSequence> Right;
+};
 
 
 UCLASS()

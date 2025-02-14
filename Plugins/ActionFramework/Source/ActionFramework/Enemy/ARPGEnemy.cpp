@@ -8,6 +8,11 @@
 #include "ActionFramework/Animation/ARPGAnimInstance.h"
 #include "ActionFramework/AbilitySystem/ARPGAttributeSet.h"
 #include "ActionFramework/Components/TargetingComponent.h"
+#include "ActionFramework/Enemy/ARPGAIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
+#include "GameFramework/CharacterMovementComponent.h"
+
 
 // Sets default values
 AARPGEnemy::AARPGEnemy()
@@ -17,6 +22,24 @@ AARPGEnemy::AARPGEnemy()
 
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	HitReactionComponent = CreateDefaultSubobject<UHitReactionComponent>(TEXT("HitReactionComponent"));
+
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationRoll = false;
+	bUseControllerRotationYaw = false;
+
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
+}
+
+void AARPGEnemy::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	ARPGAIController = Cast<AARPGAIController>(NewController);
+	ARPGAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
+	ARPGAIController->RunBehaviorTree(BehaviorTree);
+
+	ARPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), false);
 }
 
 AActor* AARPGEnemy::GetEquippedWeapon_Implementation()

@@ -25,7 +25,7 @@ void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TArray<FGameplayTag> ItemTags = ItemTypeTags.GetGameplayTagArray();
+	TArray<FGameplayTag> ItemTags = AllItemTypeTags.GetGameplayTagArray();
 	for (const FGameplayTag& ItemTag : ItemTags)
 	{
 		InventoryItemContainer.Add(ItemTag, TArray<TObjectPtr<UItemBaseDataAsset>>());

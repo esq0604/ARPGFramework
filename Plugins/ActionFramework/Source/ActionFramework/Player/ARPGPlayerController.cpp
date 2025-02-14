@@ -173,14 +173,8 @@ void AARPGPlayerController::ToggleEscWidget(const FInputActionValue& Value)
 
 void AARPGPlayerController::LightAttack(const FInputActionValue& Value)
 {
-	/*UE_LOG(LogTemp, Warning, TEXT("IA_LightAttack c++"));
-	;
-	if (!)
-	{
-		SendAbilityLocalInput(Value, static_cast<int32>(EARPGAbilityInputID::LightAttack));
-	}*/
-	FGameplayTagContainer AttackTagContainer;
-	AttackTagContainer.AddTag(FGameplayTag::RequestGameplayTag("Ability.LightAttack"));
+
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("LightAttack"));
 	SendAbilityLocalInput(Value, static_cast<int32>(EARPGAbilityInputID::LightAttack));
 
 }

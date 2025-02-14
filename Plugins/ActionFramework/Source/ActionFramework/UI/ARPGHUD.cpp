@@ -46,25 +46,30 @@ void AARPGHUD::InitQuickWidget(APlayerController* PC, APlayerState* PS, UAbility
 
 void AARPGHUD::InitOverlayWidget(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
-	UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), OverlayWidgetClass);
-	OverlayWidget = Cast<UARPGUserWidget>(Widget);
+	if (OverlayWidgetClass && OverlayPresenter)
+	{
+		UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), OverlayWidgetClass);
+		OverlayWidget = Cast<UARPGUserWidget>(Widget);
 
-	FPresenterParams PresenterParams(PC, PS, ASC, AS,nullptr);
-	OverlayPresenter=GetPresenter(PresenterParams, OverlayPresenterClass);
-	OverlayWidget->SetPresenter(OverlayPresenter);
-	OverlayWidget->AddToViewport();
-	OverlayPresenter->BroadcastInitialValues();
-
+		FPresenterParams PresenterParams(PC, PS, ASC, AS, nullptr);
+		OverlayPresenter = GetPresenter(PresenterParams, OverlayPresenterClass);
+		OverlayWidget->SetPresenter(OverlayPresenter);
+		OverlayWidget->AddToViewport();
+		OverlayPresenter->BroadcastInitialValues();
+	}
 }
 
 void AARPGHUD::InitMenuWidget(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
-	UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), EscWidgetClass);
-	EscWidget = Cast<UEscMenuWidget>(Widget);
-	EscWidget->OnMenuButtonClicked.AddDynamic(this, &AARPGHUD::ToggleSelectMenuWidget);
-	//FPresenterParams PresenterParams(PC, PS, ASC, AS, nullptr);
-	//EscPresenter = GetPresenter(PresenterParams, EscPresenterClass);
-	//EscWidget->SetPresenter(EquipmentPresenter);
+	if (EscWidgetClass)
+	{
+		UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), EscWidgetClass);
+		EscWidget = Cast<UEscMenuWidget>(Widget);
+		EscWidget->OnMenuButtonClicked.AddDynamic(this, &AARPGHUD::ToggleSelectMenuWidget);
+		//FPresenterParams PresenterParams(PC, PS, ASC, AS, nullptr);
+		//EscPresenter = GetPresenter(PresenterParams, EscPresenterClass);
+		//EscWidget->SetPresenter(EquipmentPresenter);
+	}
 }
 
 bool AARPGHUD::ToggleMenuWidget()

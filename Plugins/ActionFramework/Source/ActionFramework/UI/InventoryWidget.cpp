@@ -3,7 +3,6 @@
 
 #include "ActionFramework/UI/InventoryWidget.h"
 #include "ActionFramework/UI/ItemListPanel.h"
-#include "ActionFramework/UI/SlotViewModel.h"
 #include "Components/Button.h"
 
 void UInventoryWidget::NativeConstruct()

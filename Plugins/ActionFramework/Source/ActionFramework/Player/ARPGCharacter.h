@@ -19,6 +19,8 @@ class UInputMappingContext;
 class UInputAction;
 class UAbilitySystemComponent;
 class UAttributeSet;
+class UGameplayAbility;
+
 UCLASS()
 class ACTIONFRAMEWORK_API AARPGCharacter : public ACharacter ,public IAbilitySystemInterface , public ICombatable, public IGameplayTagAssetInterface
 {
@@ -54,6 +56,9 @@ public:
 	virtual void ToggleTargeting(bool bEnable) override;
 	UAbilitySystemComponent* GetAbilitySystemComponent() const;
 
+private:
+	void AddCharacterAbilities();
+
 protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "ARPGCharacter")
 	TObjectPtr<UARPGSpringArmComponent> TargetingCameraSpringArm;
@@ -70,6 +75,9 @@ private:
 
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
-
+	
 	TObjectPtr<UAttributeSet> AttributeSet;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TArray<TSubclassOf<UGameplayAbility>> StartAbilities;
 };

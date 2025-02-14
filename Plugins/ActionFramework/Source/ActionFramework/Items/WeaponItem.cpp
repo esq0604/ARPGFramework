@@ -97,12 +97,15 @@ void AWeaponItem::EquipAbility(const UItemBaseDataAsset* InData)
 
 	if (ASC)
 	{
-		for (auto& Ability : EquipData->WeaponData.Abilties)
+		for (const auto& Ability : EquipData->WeaponData.Abilties)
 		{
-			UARPGAbility* AbilityCDO = Ability->GetDefaultObject<UARPGAbility>();
-			
-			FGameplayAbilitySpec AbilitySpec(AbilityCDO, 1, static_cast<int32>(AbilityCDO->InputID), this);
-			ASC->GiveAbility(AbilitySpec);
+			if (ensure(Ability))
+			{
+				UARPGAbility* AbilityCDO = Ability->GetDefaultObject<UARPGAbility>();
+
+				FGameplayAbilitySpec AbilitySpec(AbilityCDO, 1, static_cast<int32>(AbilityCDO->InputID), this);
+				ASC->GiveAbility(AbilitySpec);
+			}
 		}
 
 	}

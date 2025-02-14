@@ -47,7 +47,7 @@ public class ActionFramework : ModuleRules
                 "GameplayTasks",
                 "MotionWarping",
 				"Niagara",
-                "ModelViewViewModel"
+				"AIModule"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

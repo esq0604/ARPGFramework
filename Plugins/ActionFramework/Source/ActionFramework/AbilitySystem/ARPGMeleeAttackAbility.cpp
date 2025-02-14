@@ -28,30 +28,6 @@ void UARPGMeleeAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle H
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	//if (!ActorInfo->AbilitySystemComponent.IsValid() || !CommitAbility(Handle, ActorInfo, ActivationInfo))
-	//{
-
- //       UE_LOG(LogTemp, Warning, TEXT("ASC, Commit Ability not valid"));
-	//	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-	//}
-
- //   if (ActorInfo->OwnerActor == nullptr || ComboDataAsset ==nullptr)
- //   {
-
- //       UE_LOG(LogTemp, Warning, TEXT("OwnerActor null , ComboDataAsset"));
- //       return;
- //   }
- //   if (ComboDataAsset->ComboInfos.Num() == 0)
- //   {
- //       UE_LOG(LogTemp, Warning, TEXT("ComboInfos in ComboDataAsset Num == 0"));
- //       return;
- //   }
- //   if (!ComboDataAsset->ComboInfos.IsValidIndex(CurrentComboIndex))
- //   {
- //       UE_LOG(LogTemp, Warning, TEXT("ComboInfos CurrentComboIndex in ComboDataAsset is not vaild"));
- //       return;
- //   }
-
     if (CommitAbility(Handle, ActorInfo, ActivationInfo))
     {
         CurrentActivateComboIndex = CurrentComboIndex;

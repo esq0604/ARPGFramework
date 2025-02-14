@@ -48,7 +48,7 @@ public:
 	bool IsItemEquipped(UItemBaseDataAsset* Item);
 	UItemBaseDataAsset* GetCurrentEquipWeaponData();
 	
-	FGameplayTagContainer GetAllItemType() { return ItemTypeTags;}
+	FGameplayTagContainer GetAllItemType() { return AllItemTypeTags;}
 	uint8 GetEquipmentItemCapaicty(FGameplayTag ItemType); 
 	uint8 GetInventoryItemContainerSize() { return ItemContainerSize; }
 	void ChangeNextWeapon(float ChangedIndex);
@@ -101,7 +101,7 @@ protected:
 	uint8 EquipToolCapacity{ 6 };*/
 
 	UPROPERTY(EditDefaultsOnly, Category = "InventoryComponent | Items")
-	FGameplayTagContainer ItemTypeTags;
+	FGameplayTagContainer AllItemTypeTags;
 
 //
 //
