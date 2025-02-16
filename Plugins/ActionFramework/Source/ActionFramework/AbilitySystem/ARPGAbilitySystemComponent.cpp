@@ -2,14 +2,17 @@
 
 
 #include "ActionFramework/AbilitySystem/ARPGAbilitySystemComponent.h"
-
+#include "ActionFramework/AbilitySystem/ARPGAbility.h"
 void UARPGAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartupAbilties)
 {
 	for (TSubclassOf<UGameplayAbility> AbilityClass : StartupAbilties)
 	{
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
 		GiveAbility(AbilitySpec);
-		//GiveAbilityAndActivate
+		if (const UARPGAbility* ARPGAbility = Cast<UARPGAbility>(AbilitySpec.Ability))
+		{
+			AbilitySpec.DynamicAbilityTags.AddTag(ARPGAbility->StartupInputTag);
+		}
 	}
 }
 

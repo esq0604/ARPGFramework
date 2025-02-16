@@ -45,6 +45,10 @@ namespace ARPGGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(ItemType_Tool, "ItemType.Tool", "Item type tag ");
 
 
-
+	//Input
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_RightClick, "Input.LightClick", "Input type tag ");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_LeftClick, "Input.RightClick", "Input type tag ");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Move, "Input.Move", "Input type tag ");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Look, "Input.Look", "Input type tag ");
 
 }

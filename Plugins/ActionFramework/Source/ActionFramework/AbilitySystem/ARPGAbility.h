@@ -17,4 +17,7 @@ class ACTIONFRAMEWORK_API UARPGAbility : public UGameplayAbility
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Ability")
 	EARPGAbilityInputID InputID{ EARPGAbilityInputID::None };
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag StartupInputTag;
 };

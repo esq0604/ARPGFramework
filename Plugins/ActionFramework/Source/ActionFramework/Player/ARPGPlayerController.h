@@ -15,6 +15,7 @@ class UInputMappingContext;
 class UAbilitySystemComponent;
 class UInputAction;
 class UEscMenuWidget;
+class UARPGInputConfig;
 struct FInputActionValue;
 
 UCLASS()
@@ -25,8 +26,14 @@ public:
 	AARPGPlayerController(const FObjectInitializer& ObjectInitializer);
 
 protected:
+
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
+
+
+private:
+	virtual void SetupInputComponent() override;
+
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
@@ -49,42 +56,42 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void SendAbilityLocalInput(const FInputActionValue& Value, int32 InputID);
+
+	void AbilityInputTagPressed(FGameplayTag InputTag);
+	void AbilityInputTagReleased(FGameplayTag InputTag);
 private:
-	virtual void SetupInputComponent() override;
+	///** Jump Input Action */
+	//UPROPERTY(EditDefaultsOnly, Category = Input)
+	//UInputAction* JumpAction{ nullptr };
 
+	///** Move Input Action */
+	//UPROPERTY(EditDefaultsOnly, Category = Input)
+	//UInputAction* MoveAction{ nullptr };
 
+	///** Look Input Action */
+	//UPROPERTY(EditDefaultsOnly, Category = Input)
+	//UInputAction* LookAction{ nullptr };
 
-private:
-	/** Jump Input Action */
-	UPROPERTY(EditDefaultsOnly, Category = Input)
-	UInputAction* JumpAction{ nullptr };
+	//UPROPERTY(EditDefaultsOnly, Category = Input)
+	//UInputAction* TargetLockAction{ nullptr };
+	//
+	//UPROPERTY(EditDefaultsOnly, Category = Input)
+	//UInputAction* ToggleEscAction{ nullptr };
 
-	/** Move Input Action */
-	UPROPERTY(EditDefaultsOnly, Category = Input)
-	UInputAction* MoveAction{ nullptr };
+	//UPROPERTY(EditDefaultsOnly, Category = Input)
+	//UInputAction* LightAttackAction{ nullptr };
 
-	/** Look Input Action */
-	UPROPERTY(EditDefaultsOnly, Category = Input)
-	UInputAction* LookAction{ nullptr };
+	//UPROPERTY(EditDefaultsOnly, Category = Input)
+	//UInputAction* BlockAction{ nullptr };
 
-	UPROPERTY(EditDefaultsOnly, Category = Input)
-	UInputAction* TargetLockAction{ nullptr };
-	
-	UPROPERTY(EditDefaultsOnly, Category = Input)
-	UInputAction* ToggleEscAction{ nullptr };
+	//UPROPERTY(EditDefaultsOnly, Category = Input)
+	//UInputAction* NextWeaponAction{ nullptr };
 
-	UPROPERTY(EditDefaultsOnly, Category = Input)
-	UInputAction* LightAttackAction{ nullptr };
-
-	UPROPERTY(EditDefaultsOnly, Category = Input)
-	UInputAction* BlockAction{ nullptr };
-
-	UPROPERTY(EditDefaultsOnly, Category = Input)
-	UInputAction* NextWeaponAction{ nullptr };
+	//UPROPERTY(EditDefaultsOnly, Category = Input)
+	//UInputAction* NextToolAction{ nullptr };
 
 	UPROPERTY(EditDefaultsOnly, Category = Input)
-	UInputAction* NextToolAction{ nullptr };
-
+	TObjectPtr<UARPGInputConfig> InputConfig;
 
 	UPROPERTY(EditDefaultsOnly, Category = "ARPGController")
 	TObjectPtr<UInputMappingContext> InputMapping;

@@ -18,7 +18,7 @@ struct FARPGInputAction
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	const TObjectPtr<UInputAction> InputAction = nullptr;
+	TObjectPtr<const UInputAction> InputAction;
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag InputTag = FGameplayTag();
@@ -30,9 +30,16 @@ class ACTIONFRAMEWORK_API UARPGInputConfig : public UDataAsset
 {
 	GENERATED_BODY()
 
-	const UInputAction* FindAbilityInputActionForTag(const FGameplayTag& InputTag, bool bLogNotFound = false) const;
+public:
+
+	const UInputAction* FindNativeInputActionForTag(const FGameplayTag& InputTag, bool bLogNotFound = true) const;
+
+	const UInputAction* FindAbilityInputActionForTag(const FGameplayTag& InputTag, bool bLogNotFound = true) const;
 	
-	UPROPERTY(EditDefaultsOnly)
-	TArray<FARPGInputAction> AbilityInputAction;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (TitleProperty = "InputAction"))
+	TArray<FARPGInputAction> AbilityInputActions;
 	
+	// List of input actions used by the owner.  These input actions are mapped to a gameplay tag and must be manually bound.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (TitleProperty = "InputAction"))
+	TArray<FARPGInputAction> NativeInputActions;
 };

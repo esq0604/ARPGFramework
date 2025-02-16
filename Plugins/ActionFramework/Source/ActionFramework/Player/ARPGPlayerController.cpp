@@ -7,14 +7,15 @@
 #include "GameplayAbilities/Public/AbilitySystemInterface.h"
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
 #include "ActionFramework/Inventory/InventoryComponent.h"
-#include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Blueprint/UserWidget.h"
 #include "ActionFramework/UI/ARPGHUD.h"
 #include "ActionFramework/Camerra/ARPGSpringArmComponent.h"
 #include "GameFramework/PlayerState.h"
+#include "ActionFramework/ARPGGameplayTags.h"
 //#include "ActionFramework/Inventory/InventoryComponent.h"
+#include "ActionFramework/Input/ARPGInputComponent.h"
 #include "ActionFramework/ActionFramework.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -29,6 +30,19 @@ AARPGPlayerController::AARPGPlayerController(const FObjectInitializer& ObjectIni
 void AARPGPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	check(InputMapping)
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+
+	Subsystem->ClearAllMappings();
+	Subsystem->AddMappingContext(InputMapping, 0);
+
+	DefaultMouseCursor =  EMouseCursor::Default;
+
+	FInputModeGameAndUI InputModeData;
+	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	SetInputMode(InputModeData);
+
 }
 
 void AARPGPlayerController::OnPossess(APawn* InPawn)
@@ -44,13 +58,14 @@ void AARPGPlayerController::OnPossess(APawn* InPawn)
 void AARPGPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
-	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
 
-	Subsystem->ClearAllMappings();
-	Subsystem->AddMappingContext(InputMapping, 0);
 
-	UEnhancedInputComponent* EnhancedInputComp = Cast<UEnhancedInputComponent>(InputComponent);
-	EnhancedInputComp->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AARPGPlayerController::Move);
+	UARPGInputComponent* InputComp = CastChecked<UARPGInputComponent>(InputComponent);
+
+	InputComp->BindAbilityActions(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased);
+	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Move, ETriggerEvent::Triggered, this, &ThisClass::Move,false);
+	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Look, ETriggerEvent::Triggered, this, &ThisClass::Look, false);
+	/*EnhancedInputComp->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AARPGPlayerController::Move);
 	EnhancedInputComp->BindAction(LookAction, ETriggerEvent::Triggered, this, &AARPGPlayerController::Look);
 	EnhancedInputComp->BindAction(TargetLockAction, ETriggerEvent::Started, this, &AARPGPlayerController::TargetLock);
 	EnhancedInputComp->BindAction(ToggleEscAction, ETriggerEvent::Started, this, &AARPGPlayerController::ToggleEscWidget);
@@ -60,17 +75,18 @@ void AARPGPlayerController::SetupInputComponent()
 	EnhancedInputComp->BindAction(NextWeaponAction, ETriggerEvent::Started, this, &AARPGPlayerController::ChangeNextWeapon);
 	EnhancedInputComp->BindAction(NextToolAction, ETriggerEvent::Started, this, &AARPGPlayerController::ChangeNextTool);
 
-	FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/ActionFramework"), FName("EARPGAbilityInputID"));
-	APlayerState* PS = GetPlayerState<APlayerState>();
-	ASC = Cast<IAbilitySystemInterface>(PS)->GetAbilitySystemComponent();
-	ASC->BindAbilityActivationToInputComponent(EnhancedInputComp, FGameplayAbilityInputBinds
-	(
-		FString("Confirm"),
-		FString("Cancel"),
-		AbilityEnumAssetPath,
-		static_cast<int32>(EARPGAbilityInputID::Confirm),
-		static_cast<int32>(EARPGAbilityInputID::Cancel)
-	));
+	*/
+	//FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/ActionFramework"), FName("EARPGAbilityInputID"));
+	//APlayerState* PS = GetPlayerState<APlayerState>();
+	//ASC = Cast<IAbilitySystemInterface>(PS)->GetAbilitySystemComponent();
+	//ASC->BindAbilityActivationToInputComponent(EnhancedInputComp, FGameplayAbilityInputBinds
+	//(
+	//	FString("Confirm"),
+	//	FString("Cancel"),
+	//	AbilityEnumAssetPath,
+	//	static_cast<int32>(EARPGAbilityInputID::Confirm),
+	//	static_cast<int32>(EARPGAbilityInputID::Cancel)
+	//));
 
 }
 
@@ -88,6 +104,15 @@ void AARPGPlayerController::SendAbilityLocalInput(const FInputActionValue& Value
 	{
 		ASC->AbilityLocalInputReleased(InputID);
 	}
+}
+
+void AARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
+{
+
+}
+
+void AARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
+{
 }
 
 void AARPGPlayerController::Move(const FInputActionValue& Value)

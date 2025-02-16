@@ -3,3 +3,6 @@
 
 #include "ActionFramework/Input/ARPGInputComponent.h"
 
+UARPGInputComponent::UARPGInputComponent()
+{
+}
