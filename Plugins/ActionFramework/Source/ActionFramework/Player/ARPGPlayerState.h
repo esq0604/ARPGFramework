@@ -11,6 +11,7 @@
  * 
  */
 class UAbilitySystemComponent;
+class UARPGAbilitySystemComponent;
 class UARPGAttributeSet;
 
 UCLASS()
@@ -21,6 +22,7 @@ class ACTIONFRAMEWORK_API AARPGPlayerState : public APlayerState ,public IAbilit
 public:
 	AARPGPlayerState();
 
+	UARPGAbilitySystemComponent* GetARPGAbilitySystemComponent() const { return ASC; }
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UARPGAttributeSet* GetAttributeSet() const { return AttributeSet; }
 protected:
@@ -35,5 +37,5 @@ private:
 	TObjectPtr<UARPGAttributeSet> AttributeSet;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UAbilitySystemComponent> ASC;
+	TObjectPtr<UARPGAbilitySystemComponent> ASC;
 };

@@ -12,10 +12,11 @@
  */
 class UARPGSpringArmComponent;
 class UInputMappingContext;
-class UAbilitySystemComponent;
+class UARPGAbilitySystemComponent;
 class UInputAction;
 class UEscMenuWidget;
 class UARPGInputConfig;
+class AARPGPlayerState;
 struct FInputActionValue;
 
 UCLASS()
@@ -25,6 +26,8 @@ class ACTIONFRAMEWORK_API AARPGPlayerController : public APlayerController
 public:
 	AARPGPlayerController(const FObjectInitializer& ObjectInitializer);
 
+	AARPGPlayerState* GetARPGPlayerState() const;
+	UARPGAbilitySystemComponent* GetARPGAbilitySystemComponent() const;
 protected:
 
 	virtual void BeginPlay() override;
@@ -44,21 +47,15 @@ private:
 
 	void ToggleEscWidget(const FInputActionValue& Value);
 
-	void LightAttack(const FInputActionValue& Value);
-
-	void Block(const FInputActionValue& Value);
-
 	void ChangeNextWeapon(const FInputActionValue& Value);
 	void ChangeNextTool(const FInputActionValue& Value);
 
 	UFUNCTION()
 	void HandleMenuButtonClicked(FGameplayTag ButtonTag);
 
-	UFUNCTION(BlueprintCallable)
-	void SendAbilityLocalInput(const FInputActionValue& Value, int32 InputID);
-
 	void AbilityInputTagPressed(FGameplayTag InputTag);
 	void AbilityInputTagReleased(FGameplayTag InputTag);
+	void AbilityInputTagHeld(FGameplayTag InputTag);
 private:
 	///** Jump Input Action */
 	//UPROPERTY(EditDefaultsOnly, Category = Input)
@@ -98,7 +95,7 @@ private:
 
 	TObjectPtr<UARPGSpringArmComponent> SpringArmComponent;
 	
-	TObjectPtr<UAbilitySystemComponent> ASC;
+	TObjectPtr<UARPGAbilitySystemComponent> ASC;
 	bool bAnalogSettledSinceLastTargetSwitch = false;
 	float TargetSwitchAnalogValue = .8f;
 };

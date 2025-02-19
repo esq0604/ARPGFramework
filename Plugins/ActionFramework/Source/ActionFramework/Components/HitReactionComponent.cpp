@@ -34,6 +34,12 @@ void UHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	// ...
 }
 
+void UHitReactionComponent::PlayParryMontage(UAnimMontage* ExecutedMontage)
+{
+	ACharacter* OwnerCharaacter = Cast<ACharacter>(GetOwner());
+	OwnerCharaacter->PlayAnimMontage(ExecutedMontage);
+}
+
 void UHitReactionComponent::ExecuteHitReaction(FGameplayTag HitDirectionTag)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Tag Name : %s"), *HitDirectionTag.ToString());

@@ -5,6 +5,7 @@
 #include "ActionFramework/UI/ARPGUserWidget.h"
 #include "ActionFramework/UI/EscMenuWidget.h"
 #include "ActionFramework/UI/ARPGPresenter.h"
+#include "ActionFramework/ARPGGameplayTags.h"
 #include "AbilitySystemComponent.h"
 #include "AttributeSet.h"
 
@@ -98,7 +99,7 @@ bool AARPGHUD::ToggleMenuWidget()
 
 void AARPGHUD::ToggleSelectMenuWidget(FGameplayTag EventTag)
 {
-	if (EventTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.OpenEquipmentWidget"))))
+	if (EventTag.MatchesTag(ARPGGameplayTags::GameplayEvent_OpenEquipment))
 	{
 		if (EquipmentWidget)
 		{

@@ -9,6 +9,7 @@
 #include "ActionFramework/AbilitySystem/ARPGAttributeSet.h"
 #include "ActionFramework/Components/TargetingComponent.h"
 #include "ActionFramework/Enemy/ARPGAIController.h"
+#include "ActionFramework/ARPGGameplayTags.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -26,8 +27,10 @@ AARPGEnemy::AARPGEnemy()
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = false;
-
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
+	AttributeSet = CreateDefaultSubobject<UARPGAttributeSet>("AttributeSet");
+	ASC->AddAttributeSetSubobject<UAttributeSet>(AttributeSet);
 
 }
 
@@ -76,6 +79,11 @@ void AARPGEnemy::BeginPlay()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("GetMesh nullptr"));
 	}
+
+	ASC->RegisterGameplayTagEvent(ARPGGameplayTags::GameplayEffects_HitReact, EGameplayTagEventType::NewOrRemoved).AddUObject(
+		this,
+		&ThisClass::HitReactTagChanged
+	);
 }
 
 void AARPGEnemy::PostInitializeComponents()
@@ -125,5 +133,12 @@ void AARPGEnemy::OnHealthChange(const FOnAttributeChangeData& Data)
 		//3¹ø ±¦ÂúÀº¹æ¹ý ¹¹ ¾ø³ª?
 	}
 	
+}
+
+void AARPGEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewTagCount)
+{
+	bHitReacting = NewTagCount > 0;
+
+	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed;
 }
 

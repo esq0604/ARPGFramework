@@ -2,6 +2,7 @@
 
 #include "ActionFramework/UI/EscMenuWidget.h"
 #include "ActionFramework/UI/EscPresenter.h"
+#include "ActionFramework/ARPGGameplayTags.h"
 #include "Components/Button.h"
 #include "EscMenuWidget.h"
 
@@ -59,12 +60,12 @@ void UEscMenuWidget::HandleInventoryButtonClicked()
 
 void UEscMenuWidget::HandleEquipmentButtonClicked()
 {
-	OnMenuButtonClicked.Broadcast(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.OpenEquipmentWidget")));
+	OnMenuButtonClicked.Broadcast(ARPGGameplayTags::GameplayEvent_OpenEquipment);
     SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UEscMenuWidget::HandleExitButtonClicked()
 {
-	OnMenuButtonClicked.Broadcast(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.ExitGame")));
+	OnMenuButtonClicked.Broadcast(ARPGGameplayTags::GameplayEvent_ExitGame);
     SetVisibility(ESlateVisibility::Collapsed);
 }

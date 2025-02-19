@@ -4,6 +4,7 @@
 #include "ActionFramework/Items/WeaponItem.h"
 #include "ActionFramework/Datas/EquipBaseItemDataAsset.h"
 #include "ActionFramework/Components/WeaponCollisionComponent.h"
+#include "ActionFramework/ARPGGameplayTags.h"
 #include "Components/BoxComponent.h"
 #include "GameplayAbilities/Public/AbilitySystemInterface.h"
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
@@ -103,7 +104,8 @@ void AWeaponItem::EquipAbility(const UItemBaseDataAsset* InData)
 			{
 				UARPGAbility* AbilityCDO = Ability->GetDefaultObject<UARPGAbility>();
 
-				FGameplayAbilitySpec AbilitySpec(AbilityCDO, 1, static_cast<int32>(AbilityCDO->InputID), this);
+				FGameplayAbilitySpec AbilitySpec(AbilityCDO, 1);
+				AbilitySpec.DynamicAbilityTags.AddTag(AbilityCDO->StartupInputTag);
 				ASC->GiveAbility(AbilitySpec);
 			}
 		}
@@ -158,7 +160,6 @@ void AWeaponItem::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Weapon Overlap"));
 	AlreadyHitActor.AddUnique(SweepResult.GetActor());
 	IAbilitySystemInterface* IAS = Cast<IAbilitySystemInterface>(GetOwner());
 	if (IAS)
@@ -172,7 +173,7 @@ void AWeaponItem::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 		
 		Payload.ContextHandle.AddInstigator(GetOwner(), GetOwner());
 		Payload.ContextHandle.AddHitResult(SweepResult);
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), FGameplayTag::RequestGameplayTag("Attack.Hit"), Payload);
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ARPGGameplayTags::GameplayEvent_Attack_Hit, Payload);
 	}
 }
 

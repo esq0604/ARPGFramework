@@ -29,6 +29,12 @@ public:
 
 	virtual void PossessedBy(AController* NewController) override;
 
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
 	virtual AActor* GetEquippedWeapon_Implementation() override;
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
@@ -43,15 +49,13 @@ protected:
 	void Dead();
 
 	void Dead_Implementation();
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
 	void OnHealthChange(const FOnAttributeChangeData& Data);
+
+	UFUNCTION()
+	void HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewTagCount);
+
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly ,Category = "ARPGEnemy")
@@ -59,6 +63,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "ARPGEnemy")
 	TObjectPtr<AWeaponItem> WeaponInstance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "ARPGEnemy")
+	TObjectPtr<UAttributeSet> AttributeSet;
+
 
 private:
 	UPROPERTY(EditDefaultsOnly,Category="ARPGEnemy")
@@ -73,4 +81,9 @@ private:
 	UPROPERTY()
 	TObjectPtr<AARPGAIController> ARPGAIController;
 
+	UPROPERTY()
+	bool bHitReacting;
+
+	UPROPERTY(EditDefaultsOnly)
+	float BaseWalkSpeed;
 };

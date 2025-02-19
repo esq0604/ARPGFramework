@@ -23,8 +23,8 @@ public:
 	template<class UserClass, typename FuncType>
 	void BindNativeAction(const UARPGInputConfig* InputConfig, const FGameplayTag& InputTag, ETriggerEvent TriggerEvent, UserClass* Object, FuncType Func, bool bLogIfNotFound);
 
-	template<class UserClass, typename PressedFuncType, typename ReleasedFuncType>
-	void BindAbilityActions(const UARPGInputConfig* InputConfig, UserClass* Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc);
+	template<class UserClass, typename PressedFuncType, typename ReleasedFuncType , typename HeldFuncType>
+	void BindAbilityActions(const UARPGInputConfig* InputConfig, UserClass* Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc, HeldFuncType HeldFunc);
 
 
 };
@@ -40,8 +40,8 @@ void UARPGInputComponent::BindNativeAction(const UARPGInputConfig* InputConfig, 
 }
 
 
-template <class UserClass, typename PressedFuncType, typename ReleasedFuncType>
-void UARPGInputComponent::BindAbilityActions(const UARPGInputConfig* InputConfig, UserClass* Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc)
+template <class UserClass, typename PressedFuncType, typename ReleasedFuncType, typename HeldFuncType>
+void UARPGInputComponent::BindAbilityActions(const UARPGInputConfig* InputConfig, UserClass* Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc, HeldFuncType HeldFunc)
 {
 	check(InputConfig);
 
@@ -57,6 +57,10 @@ void UARPGInputComponent::BindAbilityActions(const UARPGInputConfig* InputConfig
 			if (ReleasedFunc)
 			{
 				BindAction(Action.InputAction, ETriggerEvent::Completed, Object, ReleasedFunc, Action.InputTag);
+			}
+			if (HeldFunc)
+			{
+				BindAction(Action.InputAction, ETriggerEvent::Triggered, Object, HeldFunc, Action.InputTag);
 			}
 		}
 	}

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "ActionFramework/ActionFramework.h"
 #include "ARPGAbility.generated.h"
 
 /**
@@ -15,8 +14,6 @@ class ACTIONFRAMEWORK_API UARPGAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Ability")
-	EARPGAbilityInputID InputID{ EARPGAbilityInputID::None };
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag StartupInputTag;

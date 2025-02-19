@@ -3,9 +3,9 @@
 
 #include "ARPGPlayerController.h"
 #include "GameFramework/Character.h"
-#include "GameFramework/PlayerState.h"
+#include "ActionFramework/Player/ARPGPlayerState.h"
 #include "GameplayAbilities/Public/AbilitySystemInterface.h"
-#include "GameplayAbilities/Public/AbilitySystemComponent.h"
+#include "ActionFramework/AbilitySystem/ARPGAbilitySystemComponent.h"
 #include "ActionFramework/Inventory/InventoryComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
@@ -27,6 +27,17 @@ AARPGPlayerController::AARPGPlayerController(const FObjectInitializer& ObjectIni
 	
 }
 
+AARPGPlayerState* AARPGPlayerController::GetARPGPlayerState() const
+{
+	return CastChecked<AARPGPlayerState>(PlayerState);
+}
+
+UARPGAbilitySystemComponent* AARPGPlayerController::GetARPGAbilitySystemComponent() const
+{
+	const AARPGPlayerState* ARPGPS = GetARPGPlayerState();
+	return (ARPGPS ? ARPGPS->GetARPGAbilitySystemComponent() : nullptr);
+}
+
 void AARPGPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -37,11 +48,11 @@ void AARPGPlayerController::BeginPlay()
 	Subsystem->ClearAllMappings();
 	Subsystem->AddMappingContext(InputMapping, 0);
 
-	DefaultMouseCursor =  EMouseCursor::Default;
+	//DefaultMouseCursor =  EMouseCursor::Default;
 
-	FInputModeGameAndUI InputModeData;
-	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-	SetInputMode(InputModeData);
+	//FInputModeGameAndUI InputModeData;
+	//InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	//SetInputMode(InputModeData);
 
 }
 
@@ -62,57 +73,31 @@ void AARPGPlayerController::SetupInputComponent()
 
 	UARPGInputComponent* InputComp = CastChecked<UARPGInputComponent>(InputComponent);
 
-	InputComp->BindAbilityActions(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased);
+	InputComp->BindAbilityActions(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Move, ETriggerEvent::Triggered, this, &ThisClass::Move,false);
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Look, ETriggerEvent::Triggered, this, &ThisClass::Look, false);
-	/*EnhancedInputComp->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AARPGPlayerController::Move);
-	EnhancedInputComp->BindAction(LookAction, ETriggerEvent::Triggered, this, &AARPGPlayerController::Look);
-	EnhancedInputComp->BindAction(TargetLockAction, ETriggerEvent::Started, this, &AARPGPlayerController::TargetLock);
-	EnhancedInputComp->BindAction(ToggleEscAction, ETriggerEvent::Started, this, &AARPGPlayerController::ToggleEscWidget);
-	EnhancedInputComp->BindAction(LightAttackAction, ETriggerEvent::Started, this, &AARPGPlayerController::LightAttack);
-	EnhancedInputComp->BindAction(BlockAction, ETriggerEvent::Started, this, &AARPGPlayerController::Block);
-	EnhancedInputComp->BindAction(BlockAction, ETriggerEvent::Completed, this, &AARPGPlayerController::Block);
-	EnhancedInputComp->BindAction(NextWeaponAction, ETriggerEvent::Started, this, &AARPGPlayerController::ChangeNextWeapon);
-	EnhancedInputComp->BindAction(NextToolAction, ETriggerEvent::Started, this, &AARPGPlayerController::ChangeNextTool);
-
-	*/
-	//FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/ActionFramework"), FName("EARPGAbilityInputID"));
-	//APlayerState* PS = GetPlayerState<APlayerState>();
-	//ASC = Cast<IAbilitySystemInterface>(PS)->GetAbilitySystemComponent();
-	//ASC->BindAbilityActivationToInputComponent(EnhancedInputComp, FGameplayAbilityInputBinds
-	//(
-	//	FString("Confirm"),
-	//	FString("Cancel"),
-	//	AbilityEnumAssetPath,
-	//	static_cast<int32>(EARPGAbilityInputID::Confirm),
-	//	static_cast<int32>(EARPGAbilityInputID::Cancel)
-	//));
-
-}
-
-void AARPGPlayerController::SendAbilityLocalInput(const FInputActionValue& Value, int32 InputID)
-{
-
-	if (!ASC)
-		return;
-
-	if (Value.Get<bool>())
-	{
-		ASC->AbilityLocalInputPressed(InputID);
-	}
-	else
-	{
-		ASC->AbilityLocalInputReleased(InputID);
-	}
+	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Esc, ETriggerEvent::Started, this, &ThisClass::ToggleEscWidget, false);
 }
 
 void AARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
-
+	if (GetARPGAbilitySystemComponent())
+	{
+		GetARPGAbilitySystemComponent()->AbilityInputTagPressed(InputTag);
+	}
 }
 
 void AARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
+	if(GetARPGAbilitySystemComponent())
+		GetARPGAbilitySystemComponent()->AbilityInputTagReleased(InputTag);
+}
+
+void AARPGPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
+{
+
+	if (GetARPGAbilitySystemComponent())
+		GetARPGAbilitySystemComponent()->AbilityInputTagHeld(InputTag);
 }
 
 void AARPGPlayerController::Move(const FInputActionValue& Value)
@@ -196,18 +181,6 @@ void AARPGPlayerController::ToggleEscWidget(const FInputActionValue& Value)
 	}
 }
 
-void AARPGPlayerController::LightAttack(const FInputActionValue& Value)
-{
-
-	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("LightAttack"));
-	SendAbilityLocalInput(Value, static_cast<int32>(EARPGAbilityInputID::LightAttack));
-
-}
-
-void AARPGPlayerController::Block(const FInputActionValue& Value)
-{
-	SendAbilityLocalInput(Value, static_cast<int32>(EARPGAbilityInputID::Block));
-}
 
 void AARPGPlayerController::ChangeNextWeapon(const FInputActionValue& Value)
 {
@@ -223,7 +196,7 @@ void AARPGPlayerController::ChangeNextTool(const FInputActionValue& Value)
 
 void AARPGPlayerController::HandleMenuButtonClicked(FGameplayTag ButtonTag)
 {
-	if (ButtonTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.OepnInventory"))))
+	if (ButtonTag.MatchesTag(ARPGGameplayTags::GameplayEvent_OpenInventory))
 	{
 		// Inventory 위젯 토글 로직
 		APawn* ControlledPawn = GetPawn(); // PlayerCharacter에 대한 더 명확한 접근
@@ -240,7 +213,7 @@ void AARPGPlayerController::HandleMenuButtonClicked(FGameplayTag ButtonTag)
 			//}
 		}
 	}
-	else if (ButtonTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.OpenEquipmentWidget"))))
+	else if (ButtonTag.MatchesTag(ARPGGameplayTags::GameplayEvent_OpenEquipment))
 	{	
 		// Inventory 위젯 토글 로직
 		APawn* ControlledPawn = GetPawn(); // PlayerCharacter에 대한 더 명확한 접근
@@ -255,7 +228,7 @@ void AARPGPlayerController::HandleMenuButtonClicked(FGameplayTag ButtonTag)
 			//}
 		}
 	}
-	else if (ButtonTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("EscMenuEvent.ExitGame"))))
+	else if (ButtonTag.MatchesTag(ARPGGameplayTags::GameplayEvent_ExitGame))
 	{
 		UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, true);
 	}

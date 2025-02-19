@@ -2,13 +2,13 @@
 
 
 #include "ARPGPlayerState.h"
-#include "AbilitySystemComponent.h"
+#include "ActionFramework/AbilitySystem/ARPGAbilitySystemComponent.h"
 #include "ActionFramework/AbilitySystem/ARPGAttributeSet.h"
 
 
 AARPGPlayerState::AARPGPlayerState()
 {
-    ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+    ASC = CreateDefaultSubobject<UARPGAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
     //ASC->SetIsReplicated(true);
     //ASC->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
     AttributeSet = CreateDefaultSubobject<UARPGAttributeSet>(TEXT("ARPGAttributeSet"));
