@@ -4,6 +4,7 @@
 #include "ActionFramework/Items/WeaponItem.h"
 #include "ActionFramework/Datas/EquipBaseItemDataAsset.h"
 #include "ActionFramework/Components/WeaponCollisionComponent.h"
+
 #include "ActionFramework/ARPGGameplayTags.h"
 #include "Components/BoxComponent.h"
 #include "GameplayAbilities/Public/AbilitySystemInterface.h"
@@ -87,7 +88,7 @@ void AWeaponItem::EquipAbility(const UItemBaseDataAsset* InData)
 
 	UItemBaseDataAsset* nonConstItem = const_cast<UItemBaseDataAsset*>(InData);
 	UEquipBaseItemDataAsset* EquipData = Cast<UEquipBaseItemDataAsset>(nonConstItem);
-
+	
 	if (!ASI)
 		return;
 	if (!EquipData)
@@ -95,7 +96,7 @@ void AWeaponItem::EquipAbility(const UItemBaseDataAsset* InData)
 
 	ASC = ASI->GetAbilitySystemComponent();
 	
-
+	ComboData = EquipData->WeaponData.ComboDataAsset;
 	if (ASC)
 	{
 		for (const auto& Ability : EquipData->WeaponData.Abilties)
@@ -104,7 +105,7 @@ void AWeaponItem::EquipAbility(const UItemBaseDataAsset* InData)
 			{
 				UARPGAbility* AbilityCDO = Ability->GetDefaultObject<UARPGAbility>();
 
-				FGameplayAbilitySpec AbilitySpec(AbilityCDO, 1);
+				FGameplayAbilitySpec AbilitySpec(AbilityCDO, 1,INDEX_NONE, Cast<UObject>(ComboData));
 				AbilitySpec.DynamicAbilityTags.AddTag(AbilityCDO->StartupInputTag);
 				ASC->GiveAbility(AbilitySpec);
 			}
@@ -170,7 +171,7 @@ void AWeaponItem::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 		 
 		Payload.Target = SweepResult.GetActor();
 		Payload.ContextHandle = IAS->GetAbilitySystemComponent()->MakeEffectContext();
-		
+		Payload.ContextHandle.AddSourceObject(ComboData);
 		Payload.ContextHandle.AddInstigator(GetOwner(), GetOwner());
 		Payload.ContextHandle.AddHitResult(SweepResult);
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ARPGGameplayTags::GameplayEvent_Attack_Hit, Payload);

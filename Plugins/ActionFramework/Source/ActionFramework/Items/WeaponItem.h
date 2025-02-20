@@ -55,6 +55,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly, Category = "Item | Component")
 	TObjectPtr<UBoxComponent> WeaponCollisionComponent;
 private:
+	TObjectPtr<class UComboDataAsset> ComboData;
 
 	TArray<TObjectPtr<AActor>> AlreadyHitActor;
 };

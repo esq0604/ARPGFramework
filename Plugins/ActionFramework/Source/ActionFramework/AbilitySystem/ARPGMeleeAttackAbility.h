@@ -21,9 +21,9 @@ UCLASS()
 class ACTIONFRAMEWORK_API UARPGMeleeAttackAbility : public UARPGAbility
 {
 	GENERATED_BODY()
-public:
+public:/*
 	const struct FComboInfo* GetCurrentComboData() const;
-	const struct FHitReactionInfo* GetCurrentHitReactionInfo() const;
+	const struct FHitReactionInfo* GetCurrentHitReactionInfo() const;*/
 	
 private:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
@@ -64,9 +64,6 @@ private:
 
 	TArray<UAbilityTask_WaitGameplayEvent*> AttackHitEvents;
 	TMap<UAbilityTask_WaitGameplayEvent*, uint8> AttackEventHitReactionMap;
-
-	UPROPERTY(EditDefaultsOnly, Category = "ComboInfo")
-	TObjectPtr<UComboDataAsset> ComboDataAsset;
 
 	UPROPERTY(EditDefaultsOnly, Category = "ComboInfo")
 	FGameplayTag WaitTag;

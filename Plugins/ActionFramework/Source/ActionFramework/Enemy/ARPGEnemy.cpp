@@ -80,7 +80,7 @@ void AARPGEnemy::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("GetMesh nullptr"));
 	}
 
-	ASC->RegisterGameplayTagEvent(ARPGGameplayTags::GameplayEffects_HitReact, EGameplayTagEventType::NewOrRemoved).AddUObject(
+	ASC->RegisterGameplayTagEvent(ARPGGameplayTags::GameplayEvent_HitReact, EGameplayTagEventType::NewOrRemoved).AddUObject(
 		this,
 		&ThisClass::HitReactTagChanged
 	);

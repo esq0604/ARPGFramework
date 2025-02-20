@@ -4,6 +4,7 @@
 #include "ARPGAttributeSet.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "ActionFramework/ARPGGameplayTags.h"
+#include "ActionFramework/AbilitySystem/ARPGGameplayEffectContext.h"
 #include "GameFramework/Character.h"
 #include "GameplayEffectExtension.h"
 
@@ -38,12 +39,26 @@ bool UARPGAttributeSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData&
 
 	if (Properties.TargetASC->HasMatchingGameplayTag(ARPGGameplayTags::Status_Parry) && DotProduct>0.f)
 	{
-		FGameplayCueParameters CueParams;
-		CueParams.EffectContext = Properties.EffectContextHandle;
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("HasMatching Tag Parry"));
-		Properties.TargetASC->ExecuteGameplayCue(ARPGGameplayTags::GameplayCue_Parry, CueParams);
+		
+		FGameplayEventData Payload;
+		Payload.Instigator = Properties.SourceCharacter;
+		Payload.Target = Properties.TargetCharacter;
+		Payload.ContextHandle = Properties.EffectContextHandle;
+		Properties.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_Parry,&Payload);
+
+		return bResult;
 	}
-	return bResult;
+	else if (Properties.TargetASC->HasMatchingGameplayTag(ARPGGameplayTags::Status_Block) && DotProduct > 0.f)
+	{
+		FGameplayEventData Payload;
+		Payload.ContextHandle = Properties.EffectContextHandle;
+		Properties.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_Block, &Payload);
+
+		return bResult = true;
+	}
+
+
+	return bResult = true;
 }
 
 //게임플레이 이펙트가 적용된 후 실행됩니다. 여기서 GA_HitReact, DamageFloating 등을 수행하도록합니다.
@@ -55,11 +70,12 @@ void UARPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	FEffectProperties Properties;
 	SetEffectProperties(Data, Properties);
 
-	if (const UGameplayAbility* SourceAbility = Data.EffectSpec.GetContext().GetAbility())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan,
-			FString::Printf(TEXT("PostGameplayEffectExecute, GetContextAbility: %s"), *SourceAbility->GetName()));
-	}
+	FGameplayEventData Payload;
+	Payload.Instigator = Properties.SourceCharacter;
+	Payload.Target = Properties.TargetCharacter;
+	Payload.ContextHandle = Properties.EffectContextHandle;
+
+	Properties.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_HitReact, &Payload);
 
 }
 

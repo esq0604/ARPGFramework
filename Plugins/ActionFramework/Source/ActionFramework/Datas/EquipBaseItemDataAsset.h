@@ -7,6 +7,7 @@
 #include "ActionFramework/AbilitySystem/ARPGAbility.h"
 #include "ActionFramework/Interface/Equipable.h"
 #include "ActionFramework/Interface/Useable.h"
+#include "ActionFramework/Datas/ComboDataAsset.h"
 #include "EquipBaseItemDataAsset.generated.h"
 
 /**
@@ -35,6 +36,9 @@ struct FWeaponData
 
 	UPROPERTY(EditAnywhere, Category = "EquipData")
 	TSubclassOf<UAnimInstance> UnEquippedAnimSet;
+
+	UPROPERTY(EditAnywhere, Category = "EquipData")
+	TObjectPtr<class UComboDataAsset> ComboDataAsset;
 };
 
 USTRUCT()

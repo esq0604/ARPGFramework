@@ -22,8 +22,7 @@ namespace ARPGGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_Parry, "Abilities.HitReact", "Parry Ability Tag");
 
 	//Effect
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEffects_HitReact, "GameplayEffects.HitReact", "HitReact GameplayEffect");
-
+	
 	//Status
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Death, "Status.Death", "Target has the death status.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Parry, "Status.Parry", "Target has the block state");
@@ -33,9 +32,11 @@ namespace ARPGGameplayTags
 
 	
 	//Event
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Attack_Hit, "GameplayEvent.Attack.Hit", "Event on target hit");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Attack_Hit, "GameplayEvent.AttackHit", "AttackHit Event For WaitGameplayEvent");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Block, "GameplayEvent.Block", "Block Event For ActivateAbility");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Parry, "GameplayEvent.Parry", "Parry Event For ActivateAbility");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_HitReact, "GameplayEvent.HitReact", "HitReact For ActivateAbility");
 
-	//ItemType
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_OpenInventory, "ItemType.Equipment.Weapon", "Item type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_OpenEquipment, "ItemType.Equipment.Weapon", "Item type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_ExitGame, "ItemType.Equipment.Weapon", "Item type tag ");
