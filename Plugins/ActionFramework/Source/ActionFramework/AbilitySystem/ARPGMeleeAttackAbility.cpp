@@ -8,12 +8,14 @@
 #include "ActionFramework/AbilitySystem/ARPGAttributeSet.h"
 #include "ActionFramework/Interface/Combatable.h"
 #include "ActionFramework/ARPGGameplayTags.h"
+#include "ActionFramework/AbilitySystem/ARPGGameplayEffectContext.h"
 #include "AbilitySystemBlueprintLibrary.h"
 
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayTag.h"
+
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
 #include "MotionWarpingComponent.h"
@@ -121,7 +123,7 @@ void UARPGMeleeAttackAbility::AttackHitEvent(FGameplayEventData Payload)
 
      CurrentHitReactionIdex = AttackEventHitReactionMap[AttackHitEvents[0]];
 
-     if (UComboDataAsset* ComboDataAsset = CastChecked<UComboDataAsset>(Payload.ContextHandle.GetSourceObject()))
+     if (const UComboDataAsset* ComboDataAsset = CastChecked<UComboDataAsset>(Payload.ContextHandle.GetSourceObject()))
      {
          if (!ComboDataAsset->ComboInfos.IsValidIndex(CurrentActivateComboIndex))
          {
@@ -131,24 +133,31 @@ void UARPGMeleeAttackAbility::AttackHitEvent(FGameplayEventData Payload)
          {
              return;
          }
-     
-    
+
+
          FHitReactionInfo CurHitReaction = ComboDataAsset->ComboInfos[CurrentActivateComboIndex].HitReactionInfos[CurrentHitReactionIdex];
          TSubclassOf<UGameplayEffect> DamageClass = CurHitReaction.DamageEffect;
          FGameplayTag Direction = CurHitReaction.AttackDirection;
          UAbilitySystemComponent* TargetASC = GetAttackHitTargetASC(Payload.Target);
 
-         Payload.ContextHandle.SetAbility(this);
-         Payload.ContextHandle.AddSourceObject(GetSourceObject(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo()));
+         //MakeEffectContext()
+         //Combo Index를 넘겨주기위해 Custom EffectContext를 제작하빈다.
+         
+         FGameplayEffectContextHandle ContextHandle = MakeEffectContext(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo());  //GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+         FARPGGameplayEffectContext* ARPGContext = static_cast<FARPGGameplayEffectContext*>(ContextHandle.Get());
+         ARPGContext->ComboIndex = CurrentActivateComboIndex;
+         ARPGContext->HitReactIndex = CurrentHitReactionIdex;
+         ARPGContext->SetAbility(this);
+         ARPGContext->AddSourceObject(ComboDataAsset);
+
+
+         Payload.ContextHandle = ContextHandle;
          if (TargetASC && DamageClass)
          {
-             //GetActorInfo().AbilitySystemComponent->GameplayEvent
+             GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("AttackAbility - ApplyGameplayEffect To Target"));
              GetActorInfo().AbilitySystemComponent->ApplyGameplayEffectToTarget(DamageClass.GetDefaultObject(), TargetASC, 0.f, Payload.ContextHandle);
          }
      }
-
-
-   
 }
 
 void UARPGMeleeAttackAbility::AddCanNextComboTag()

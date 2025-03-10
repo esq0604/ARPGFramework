@@ -2,7 +2,9 @@
 
 
 #include "ActionFramework/AbilitySystem/ARPGAbilitySystemComponent.h"
+#include "ActionFramework/AbilitySystem/ARPGAbilitySystemGlobals.h"
 #include "ActionFramework/AbilitySystem/ARPGAbility.h"
+
 void UARPGAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartupAbilties)
 {
 	for (TSubclassOf<UGameplayAbility> AbilityClass : StartupAbilties)
@@ -16,6 +18,19 @@ void UARPGAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf
 		}
 	}
 }
+//
+//FGameplayEffectContextHandle UARPGAbilitySystemComponent::MakeEffectContext() const
+//{
+//	FGameplayEffectContextHandle Context = FGameplayEffectContextHandle(UARPGAbilitySystemGlobals::Get().AllocGameplayEffectContext());
+//
+//	// By default use the owner and avatar as the instigator and causer
+//	if (ensureMsgf(AbilityActorInfo.IsValid(), TEXT("Unable to make effect context because AbilityActorInfo is not valid.")))
+//	{
+//		Context.AddInstigator(AbilityActorInfo->OwnerActor.Get(), AbilityActorInfo->AvatarActor.Get());
+//	}
+//
+//	return Context;
+//}
 
 void UARPGAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
 {

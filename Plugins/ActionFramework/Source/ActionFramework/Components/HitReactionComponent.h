@@ -34,15 +34,16 @@ public:
 
 	void ExecuteExecution_Implementation(UAnimMontage* ExecutedMontage, FVector Location, FRotator Rotator);
 
-protected:
-	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly,Category="HitReactionComp")
-	TMap<FGameplayTag, TObjectPtr<UAnimMontage> > HitReaction;
 
-	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly, Category = "HitReactionComp")
-	TMap<FGameplayTag, TObjectPtr<UAnimMontage> > ParryMontage;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "HitReactionComp")
+	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> HitReaction;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "HitReactionComp")
+	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> ParryMontage;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "HitReactionComp")
 	TObjectPtr<UAnimMontage> BlockHitMontage;
+protected:
 
 private:
 

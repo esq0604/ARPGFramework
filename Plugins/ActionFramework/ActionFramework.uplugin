@@ -3,8 +3,8 @@
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "ActionFramework",
-	"Description": "",
-	"Category": "Other",
+	"Description": "action framework base on gas",
+	"Category": "ActionFramework for ue gas beginer",
 	"CreatedBy": "",
 	"CreatedByURL": "",
 	"DocsURL": "",
@@ -32,10 +32,6 @@
 		},
 		{
 			"Name": "MotionWarping",
-			"Enabled": true
-		},
-		{
-			"Name": "ModelViewViewModel",
 			"Enabled": true
 		}
 	]

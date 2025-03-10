@@ -22,6 +22,7 @@ class ACTIONFRAMEWORK_API AWeaponItem : public AEquipItem
 	
 public:
 	AWeaponItem();
+	AWeaponItem(int newtest);
 
 	virtual void BeginPlay() override;
 
@@ -58,4 +59,6 @@ private:
 	TObjectPtr<class UComboDataAsset> ComboData;
 
 	TArray<TObjectPtr<AActor>> AlreadyHitActor;
+
+	const int test =5;
 };

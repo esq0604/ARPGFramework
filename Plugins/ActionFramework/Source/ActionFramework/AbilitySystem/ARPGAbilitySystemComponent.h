@@ -19,6 +19,7 @@ class ACTIONFRAMEWORK_API UARPGAbilitySystemComponent : public UAbilitySystemCom
 	
 public:
 	void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartupAbilties);
+	//virtual FGameplayEffectContextHandle MakeEffectContext() const override;
 
 	void AbilityInputTagPressed(const FGameplayTag& InputTag);
 	void AbilityInputTagHeld(const FGameplayTag& InputTag);

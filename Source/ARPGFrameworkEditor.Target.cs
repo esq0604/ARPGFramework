@@ -10,6 +10,6 @@ public class ARPGFrameworkEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
-		ExtraModuleNames.AddRange(new string[] { "ARPGFramework" ,"ActionFramework"} );
+		ExtraModuleNames.AddRange(new string[] { "ARPGFramework"} );
 	}
 }

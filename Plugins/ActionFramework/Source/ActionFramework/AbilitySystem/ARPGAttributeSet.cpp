@@ -75,6 +75,7 @@ void UARPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	Payload.Target = Properties.TargetCharacter;
 	Payload.ContextHandle = Properties.EffectContextHandle;
 
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, TEXT("GameplayEvent - Hit React"));
 	Properties.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_HitReact, &Payload);
 
 }

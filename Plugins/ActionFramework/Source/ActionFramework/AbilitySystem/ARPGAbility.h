@@ -9,6 +9,7 @@
 /**
  * 
  */
+class IARPGAbilitySourceInterface;
 UCLASS()
 class ACTIONFRAMEWORK_API UARPGAbility : public UGameplayAbility
 {
@@ -17,4 +18,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag StartupInputTag;
+
+
+	virtual FGameplayEffectContextHandle MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const override;
+	virtual void GetAbilitySource(FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, float& OutSourceLevel, const IARPGAbilitySourceInterface*& OutAbilitySource, AActor*& OutEffectCauser) const;
+
 };
