@@ -12,10 +12,12 @@
 #include "ActionFramework/AbilitySystem/ARPGAttributeSet.h"
 #include "ActionFramework/UI/ARPGHUD.h"
 #include "ActionFramework/Player/ARPGPlayerState.h"
+#include "ActionFramework/Player/ARPGPlayerController.h"
 #include "ActionFramework/AbilitySystem/ARPGAbilitySystemComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerState.h"
+#include "GameplayEffect.h"
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
 
@@ -92,23 +94,14 @@ void AARPGCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	UE_LOG(LogTemp, Warning, TEXT("PossessedBy"));
-
 	IAbilitySystemInterface* ASCInterface = nullptr;
 	APlayerController* PC= Cast<APlayerController>(GetController());
 	AARPGPlayerState* PS = GetPlayerState<AARPGPlayerState>();
 	AARPGHUD* HUD = Cast<AARPGHUD>(PC->GetHUD());
 
-
-
 	InitAbilityActorInfo();
 	AddCharacterAbilities();
 
-			if (PC)
-			{
-				HUD->InitOverlayWidget(PC, GetPlayerState(), AbilitySystemComponent, AttributeSet);
-
-			}
 			if (GetMesh())
 			{	
 				if (GetMesh()->GetAnimInstance())
@@ -171,6 +164,35 @@ void AARPGCharacter::InitAbilityActorInfo()
 	PS->GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
 	AbilitySystemComponent = PS->GetAbilitySystemComponent();
 	AttributeSet = PS->GetAttributeSet();
+
+
+	InitDefaultAttribute();
+	
+	//Cast<UARPGAttributeSet>(AttributeSet)->SetHealth(100.f);
+	//float health = Cast<UARPGAttributeSet>(AttributeSet)->GetHealth();
+	
+	//UE_LOG(LogTemp, Warning, TEXT("Init Health %f"), health);
+
+	if (AARPGPlayerController* ARPGController = Cast<AARPGPlayerController>(GetController()))
+	{
+		AHUD* hud = ARPGController->GetHUD();
+		if (AARPGHUD* ARPGHud = Cast<AARPGHUD>(hud))
+		{
+			ARPGHud->InitOverlayWidget(ARPGController,GetPlayerState(),AbilitySystemComponent,AttributeSet);
+		}
+	}
+}
+
+void AARPGCharacter::InitDefaultAttribute()
+{
+	check(IsValid(GetAbilitySystemComponent()));
+	check(DefaultAttributeEffect);
+	FGameplayEffectContextHandle ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
+	ContextHandle.AddSourceObject(this);
+	ContextHandle.AddInstigator(this, this);
+
+	const FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(DefaultAttributeEffect,1.f,ContextHandle);
+	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
 }
 
 AActor* AARPGCharacter::GetEquippedWeapon_Implementation()
@@ -185,11 +207,6 @@ AActor* AARPGCharacter::GetEquippedWeapon_Implementation()
 		}
 	}
 	return nullptr;
-}
-
-void AARPGCharacter::ToggleTargeting(bool bEnable)
-{
-
 }
 
 UAbilitySystemComponent* AARPGCharacter::GetAbilitySystemComponent() const

@@ -8,6 +8,7 @@
 #include "GameplayEffectTypes.h"
 #include "GameplayAbilities/Public/AbilitySystemInterface.h"
 #include "ActionFramework/Interface/Combatable.h"
+#include "ActionFramework/UI/OverlayPresenter.h"
 #include "ARPGEnemy.generated.h"
 
 class UTargetingComponent;
@@ -17,6 +18,11 @@ class UGameplayEffect;
 class AWeaponItem;
 class UBehaviorTree;
 class AARPGAIController;
+
+//몬스터가 체력이 보여지는 조건
+//1. 플레이어가 카메라 타겟으로 지정했을때
+//2. 전투상태에 돌입했을 때.
+
 
 UCLASS()
 class ACTIONFRAMEWORK_API AARPGEnemy : public ACharacter , public ICombatable, public IAbilitySystemInterface
@@ -40,6 +46,9 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	FORCEINLINE UHitReactionComponent* GetHitReactionComponent() const { return HitReactionComponent; }
+
+	virtual void SetCombatTarget(AActor* NewCombatTarget) override;
+	virtual AActor* GetCombatTarget() override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -50,11 +59,25 @@ protected:
 
 	void Dead_Implementation();
 
+	void InitDefaultAttribute();
 private:
 	void OnHealthChange(const FOnAttributeChangeData& Data);
 
 	UFUNCTION()
 	void HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewTagCount);
+
+public:
+	UPROPERTY()
+	FOnAttributeChangedSignature OnHealthChanged;
+
+	UPROPERTY()
+	FOnAttributeChangedSignature OnMaxHealthChanged;
+
+	UPROPERTY()
+	FOnAttributeChangedSignature OnPostureChanged;
+
+	UPROPERTY()
+	FOnAttributeChangedSignature OnMaxPostureChanged;
 
 
 protected:
@@ -80,6 +103,12 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<AARPGAIController> ARPGAIController;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<UGameplayEffect> DefaultAttributeEffect;
+
+	UPROPERTY()
+	TObjectPtr<AActor> CombatTarget;
 
 	UPROPERTY()
 	bool bHitReacting;

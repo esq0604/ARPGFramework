@@ -4,19 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "ActionFramework/UI/ARPGPresenter.h"
+#include "GameplayEffectTypes.h"
 #include "OverlayPresenter.generated.h"
 
 /**
  * 
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChangeDelegate, float, NewHealth);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxHealthChangeDelegate, float, NewMaxHealth);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPercentChangeDelegate, float, NewPercent);
-
-
-struct FOnAttributeChangeData;
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBossNameChangeDelegate, FName, NewValue);
 UCLASS()
 class ACTIONFRAMEWORK_API UOverlayPresenter : public UARPGPresenter
 {
@@ -27,15 +23,34 @@ public:
 
 	virtual void BindCallBacksToDependencies() override;
 
-private:
-	void HealthChanged(const FOnAttributeChangeData& Data);
-	void MaxHealthChanged(const FOnAttributeChangeData& Data);
+	void SetBoss(AActor* NewBoss);
 
-	void UpdateHealthPercent(float NewHealth, float NewMaxHealth);
 public:
-	FOnHealthChangeDelegate OnHealthChange;
-	FOnMaxHealthChangeDelegate OnMaxHealthChange;
-	FOnPercentChangeDelegate OnHealthPercentChange;
-private:
+	void PlayerHealthChanged(const FOnAttributeChangeData& Data);
+	void PlayerMaxHealthChanged(const FOnAttributeChangeData& Data);
+	void PlayerUpdateHealthPercent(float NewHealth, float NewMaxHealth);
 
+	void PlayerPostureChanged(const FOnAttributeChangeData& Data);
+	void PlayerMaxPostureChanged(const FOnAttributeChangeData& Data);
+	void PlayerUpdatePosturePercent(float NewPosture, float NewMaxPosture);
+
+	void BossHealthChanged(const FOnAttributeChangeData& Data);
+	void BossPostureChanged(const FOnAttributeChangeData& Data);
+	void BossUpdateHealthPercent(float NewHealth, float NewMaxHealth);
+	void BossUpdatePosturePercent(float NewPosture, float NewMaxPosture);
+
+
+public:
+	FOnPercentChangeDelegate OnPlayerHealthPercentChange;
+	FOnPercentChangeDelegate OnPlayerPosturePercentChange;
+
+	FOnAttributeChangedSignature OnBossHealthChange;
+	FOnAttributeChangedSignature OnBossPostureChange;
+	FOnPercentChangeDelegate OnBossHealthPercentChange;
+	FOnPercentChangeDelegate OnBossPosturePercentChange;
+	FOnBossNameChangeDelegate OnBossNameChange;
+
+private:
+	TObjectPtr<AActor> BossActor;
+	TObjectPtr<UAbilitySystemComponent> BossASC;
 };

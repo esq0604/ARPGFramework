@@ -57,35 +57,6 @@ private:
 	void AbilityInputTagReleased(FGameplayTag InputTag);
 	void AbilityInputTagHeld(FGameplayTag InputTag);
 private:
-	///** Jump Input Action */
-	//UPROPERTY(EditDefaultsOnly, Category = Input)
-	//UInputAction* JumpAction{ nullptr };
-
-	///** Move Input Action */
-	//UPROPERTY(EditDefaultsOnly, Category = Input)
-	//UInputAction* MoveAction{ nullptr };
-
-	///** Look Input Action */
-	//UPROPERTY(EditDefaultsOnly, Category = Input)
-	//UInputAction* LookAction{ nullptr };
-
-	//UPROPERTY(EditDefaultsOnly, Category = Input)
-	//UInputAction* TargetLockAction{ nullptr };
-	//
-	//UPROPERTY(EditDefaultsOnly, Category = Input)
-	//UInputAction* ToggleEscAction{ nullptr };
-
-	//UPROPERTY(EditDefaultsOnly, Category = Input)
-	//UInputAction* LightAttackAction{ nullptr };
-
-	//UPROPERTY(EditDefaultsOnly, Category = Input)
-	//UInputAction* BlockAction{ nullptr };
-
-	//UPROPERTY(EditDefaultsOnly, Category = Input)
-	//UInputAction* NextWeaponAction{ nullptr };
-
-	//UPROPERTY(EditDefaultsOnly, Category = Input)
-	//UInputAction* NextToolAction{ nullptr };
 
 	UPROPERTY(EditDefaultsOnly, Category = Input)
 	TObjectPtr<UARPGInputConfig> InputConfig;

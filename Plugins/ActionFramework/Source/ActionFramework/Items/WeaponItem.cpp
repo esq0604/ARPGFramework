@@ -170,11 +170,10 @@ void AWeaponItem::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	IAbilitySystemInterface* IAS = Cast<IAbilitySystemInterface>(GetOwner());
 	if (IAS)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("WeaponOverlapEvent"));
 		FHitResult& HitResult = const_cast<FHitResult&>(SweepResult);
 		HitResult.ImpactPoint = GetTransform().TransformPosition(SweepResult.Location);
 		FGameplayEventData Payload;
-		 
+	
 		Payload.Target = SweepResult.GetActor();
 		Payload.ContextHandle = IAS->GetAbilitySystemComponent()->MakeEffectContext();
 		Payload.ContextHandle.AddSourceObject(ComboData);

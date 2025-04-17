@@ -8,3 +8,20 @@
 void ICombatable::ToggleTargeting(bool bEnable)
 {
 }
+
+void ICombatable::ToggleHealth(bool bEnable)
+{
+}
+
+void ICombatable::TogglePosture(bool bEnable)
+{
+}
+
+void ICombatable::SetCombatTarget(AActor* NewCombatTarget)
+{
+}
+
+AActor* ICombatable::GetCombatTarget()
+{
+	return nullptr;
+}

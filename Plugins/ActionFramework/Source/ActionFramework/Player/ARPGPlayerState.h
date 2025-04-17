@@ -12,7 +12,7 @@
  */
 class UAbilitySystemComponent;
 class UARPGAbilitySystemComponent;
-class UARPGAttributeSet;
+class UAttributeSet;
 
 UCLASS()
 class ACTIONFRAMEWORK_API AARPGPlayerState : public APlayerState ,public IAbilitySystemInterface
@@ -24,7 +24,7 @@ public:
 
 	UARPGAbilitySystemComponent* GetARPGAbilitySystemComponent() const { return ASC; }
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-	UARPGAttributeSet* GetAttributeSet() const { return AttributeSet; }
+	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -34,7 +34,7 @@ private:
 
 private:
 
-	TObjectPtr<UARPGAttributeSet> AttributeSet;
+	TObjectPtr<UAttributeSet> AttributeSet;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UARPGAbilitySystemComponent> ASC;

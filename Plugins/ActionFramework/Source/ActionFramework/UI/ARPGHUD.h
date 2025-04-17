@@ -12,6 +12,7 @@
  */
 class UARPGUserWidget;
 class UARPGPresenter;
+class UOverlayPresenter;
 class UAbilitySystemComponent;
 class UAttributeSet;
 class UEscMenuWidget;
@@ -29,6 +30,8 @@ public:
 	void InitQuickWidget(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UActorComponent* AC);
 	void InitOverlayWidget(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS);
 	void InitMenuWidget(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS);
+
+	UOverlayPresenter* GetOverlayPresenter(const FPresenterParams& PresenterParams);
 
 	bool ToggleMenuWidget();
 
@@ -75,7 +78,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UARPGPresenter> OverlayPresenterClass;
-	TObjectPtr<UARPGPresenter> OverlayPresenter;
+	TObjectPtr<UOverlayPresenter> OverlayPresenter;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UARPGPresenter> EscPresenterClass;

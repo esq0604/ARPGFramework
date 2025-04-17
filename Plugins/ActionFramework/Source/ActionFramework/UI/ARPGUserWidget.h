@@ -17,11 +17,12 @@ class ACTIONFRAMEWORK_API UARPGUserWidget : public UUserWidget
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetPresenter(UARPGPresenter* NewPresenter);
+	void SetPresenter(UObject* NewPresenter);
 
-	FORCEINLINE UARPGPresenter* GetPresenter() { return Presenter; }
+	FORCEINLINE UObject* GetPresenter() { return Presenter.Get(); }
 protected:
+	UFUNCTION()
 	virtual void WidgetPresenterSet();
 private:
-	TObjectPtr<UARPGPresenter> Presenter;
+	TWeakObjectPtr<UObject> Presenter;
 };

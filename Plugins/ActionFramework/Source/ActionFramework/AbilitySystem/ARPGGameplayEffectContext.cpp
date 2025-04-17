@@ -15,8 +15,12 @@ ACTIONFRAMEWORK_API FARPGGameplayEffectContext* FARPGGameplayEffectContext::Extr
 			if (Script->IsChildOf(FARPGGameplayEffectContext::StaticStruct()))
 			{
 
-				UE_LOG(LogTemp, Warning, TEXT("is not child"));
 				return (FARPGGameplayEffectContext*)BaseEffectContext;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("is not child"));
+				return nullptr;
 			}
 		}
 		else

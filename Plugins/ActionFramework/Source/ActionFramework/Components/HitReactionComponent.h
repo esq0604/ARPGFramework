@@ -28,7 +28,7 @@ public:
 	void PlayParryMontage(UAnimMontage* ExecutedMontage);
 
 	UFUNCTION(BlueprintCallable)
-	void ExecuteHitReaction(FGameplayTag HitDirectionTag);
+	UAnimMontage* GetHitReaction(FGameplayTag HitDirectionTag);
 	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
 	void ExecuteExecution(UAnimMontage* ExecutedMontage, FVector Location, FRotator Rotator);
 

@@ -62,7 +62,7 @@ public:
 	void SetView(UARPGUserWidget* NewView);
 
 	UEquipmentPresenterMediator* GetPresenterMediator() { return PresenterMediator;}
-	UARPGUserWidget* GetView() { return View; }
+	UARPGUserWidget* GetView() { return View.Get(); }
 
 	virtual void BroadcastInitialValues();
 	virtual void BindCallBacksToDependencies();
@@ -85,7 +85,7 @@ private:
 	//Model이 다른 컴포넌트로 구성되어있다면 해당 변수를 사용합니다.
 	TObjectPtr<UActorComponent> OptionalActorComponent;
 
-	TObjectPtr<UARPGUserWidget> View;
+	TWeakObjectPtr<UARPGUserWidget> View;
 
 
 	UPROPERTY(EditDefaultsOnly, Category = "SubWidget")

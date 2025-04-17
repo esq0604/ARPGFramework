@@ -12,6 +12,10 @@ namespace ARPGGameplayTags
 	ACTIONFRAMEWORK_API	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Abilities_Parry);
 
 
+	//Combat 태그를 추가해 전투상태에 대한 구분을 할것.
+	//Status.Combat.Parry ..
+	//Status.NonCombat.Death?? 이런식??
+
 	ACTIONFRAMEWORK_API	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Status_Death);
 	ACTIONFRAMEWORK_API	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Status_Parry);
 	ACTIONFRAMEWORK_API	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Status_Block);

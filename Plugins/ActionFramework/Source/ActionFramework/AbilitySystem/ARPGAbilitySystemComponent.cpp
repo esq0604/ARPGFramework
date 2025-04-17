@@ -18,6 +18,29 @@ void UARPGAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf
 		}
 	}
 }
+void UARPGAbilitySystemComponent::AbilitySpecInputPressed(FGameplayAbilitySpec& Spec)
+{
+	Super::AbilitySpecInputPressed(Spec);
+
+	// We don't support UGameplayAbility::bReplicateInputDirectly.
+	// Use replicated events instead so that the WaitInputPress ability task works.
+	if (Spec.IsActive())
+	{
+		// Invoke the InputPressed event. This is not replicated here. If someone is listening, they may replicate the InputPressed event to the server.
+		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle, Spec.ActivationInfo.GetActivationPredictionKey());
+	}
+}
+void UARPGAbilitySystemComponent::AbilitySpecInputReleased(FGameplayAbilitySpec& Spec)
+{
+	Super::AbilitySpecInputReleased(Spec);
+	// We don't support UGameplayAbility::bReplicateInputDirectly.
+// Use replicated events instead so that the WaitInputRelease ability task works.
+	if (Spec.IsActive())
+	{
+		// Invoke the InputReleased event. This is not replicated here. If someone is listening, they may replicate the InputReleased event to the server.
+		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle, Spec.ActivationInfo.GetActivationPredictionKey());
+	}
+}
 //
 //FGameplayEffectContextHandle UARPGAbilitySystemComponent::MakeEffectContext() const
 //{
@@ -40,7 +63,6 @@ void UARPGAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inp
 	{
 		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("AbilityInputPressByTag"));
 			AbilitySpecInputPressed(AbilitySpec);
 		}
 	}

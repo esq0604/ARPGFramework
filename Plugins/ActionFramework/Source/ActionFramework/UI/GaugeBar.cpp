@@ -5,18 +5,20 @@
 #include "ActionFramework/UI/OverlayPresenter.h"
 #include "Components/ProgressBar.h"
 
+
 void UGaugeBar::WidgetPresenterSet()
 {
-	UOverlayPresenter* OverlayPresenter = Cast<UOverlayPresenter>(GetPresenter());
-	if (OverlayPresenter)
-	{
-		OverlayPresenter->OnHealthPercentChange.AddDynamic(this, &UGaugeBar::UpdateGauge);
-	}
-
+	
 }
 
-void UGaugeBar::UpdateGauge(float Percent)
+void UGaugeBar::SetBarPercent(float NewVal)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Uddate Gauge : %f"), Percent);
-	ProgressBar->SetPercent(Percent);
+	ProgressBar->SetPercent(NewVal);
+}
+
+
+void UGaugeBar::BindPercentDelegate(FOnPercentChangeDelegate& InDelegate)
+{
+	if(!InDelegate.IsBound())
+		InDelegate.AddDynamic(this, &UGaugeBar::SetBarPercent);
 }

@@ -40,35 +40,16 @@ void UHitReactionComponent::PlayParryMontage(UAnimMontage* ExecutedMontage)
 	OwnerCharaacter->PlayAnimMontage(ExecutedMontage);
 }
 
-void UHitReactionComponent::ExecuteHitReaction(FGameplayTag HitDirectionTag)
+UAnimMontage* UHitReactionComponent::GetHitReaction(FGameplayTag HitDirectionTag)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Tag Name : %s"), *HitDirectionTag.ToString());
-	if (GetOwner() != nullptr)
-	{
-		ACharacter* OwnerCharaacter = Cast<ACharacter>(GetOwner());
-		if(HitReaction.Find(HitDirectionTag) !=nullptr)
-		{
-			UAnimMontage* FindMontage = *HitReaction.Find(HitDirectionTag);
-			if (FindMontage)
-			{
-				float Duration = OwnerCharaacter->PlayAnimMontage(FindMontage);
-				if (Duration == 0.f)
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Play Not HitReaction Montage"));
-				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Play  HitReaction Montage"));
-
-				}
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Find Tag Anim null"));
-		}
-
-	}
+	
+		
+	UAnimMontage* FindMontage = *HitReaction.Find(HitDirectionTag);
+			
+	return FindMontage;
+		
+	
 }
 
 //void UHitReactionComponent::ExecuteExecution(UAnimMontage* ExecutedMontage , FVector Location,FRotator Rotator)

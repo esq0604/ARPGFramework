@@ -12,7 +12,8 @@ AARPGPlayerState::AARPGPlayerState()
     //ASC->SetIsReplicated(true);
     //ASC->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
     AttributeSet = CreateDefaultSubobject<UARPGAttributeSet>(TEXT("ARPGAttributeSet"));
-    ASC->AddAttributeSetSubobject<UARPGAttributeSet>(AttributeSet);
+
+    ASC->AddAttributeSetSubobject(AttributeSet.Get());
 
 }
 

@@ -31,6 +31,7 @@ void UARPGMeleeAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle H
 
     if (CommitAbility(Handle, ActorInfo, ActivationInfo))
     {
+        GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("ActivateAbility"));
         CurrentActivateComboIndex = CurrentTryActivateComboIndex;
 
         Attack(CurrentTryActivateComboIndex);
@@ -47,8 +48,11 @@ void UARPGMeleeAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handle
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
     UE_LOG(LogTemp, Warning, TEXT("EndAbility Ability"));
 
-    if(!bWasCancelled)
+    if (!bWasCancelled)
+    {
         CurrentTryActivateComboIndex = 0;
+        CurrentHitReactionIdex = 0;
+    }
 
 }
 
@@ -74,8 +78,7 @@ void UARPGMeleeAttackAbility::MontageCanceled()
 
 void UARPGMeleeAttackAbility::MontageInterrupted()
 {
-    GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("MontageInterupt"));
-    GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag("State.Attack.CanNextAttack"));
+    GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(ARPGGameplayTags::Status_Attack_CanNextAttack);
 
     CancelAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfoRef(), true);
 
@@ -85,20 +88,16 @@ void UARPGMeleeAttackAbility::Attack(uint8 ComboIndex)
 {
     if (UComboDataAsset* ComboDataAsset = CastChecked<UComboDataAsset>(GetSourceObject(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo())))
     {
+        CurrentActivateComboIndex = ComboIndex;
+
         MontgeTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, FName("None"), ComboDataAsset->ComboInfos[CurrentTryActivateComboIndex].AttackMontage);
         MontgeTask->OnCompleted.AddDynamic(this, &UARPGMeleeAttackAbility::MontageFinish);
         MontgeTask->OnInterrupted.AddDynamic(this, &UARPGMeleeAttackAbility::MontageInterrupted);
         MontgeTask->OnCancelled.AddDynamic(this, &UARPGMeleeAttackAbility::MontageCanceled);
-
-
-        for (uint8 i = 0; i < ComboDataAsset->ComboInfos[ComboIndex].HitReactionInfos.Num(); ++i)
-        {
-            UAbilityTask_WaitGameplayEvent* AttackHitEvent = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, ARPGGameplayTags::GameplayEvent_Attack_Hit, nullptr, false, true);
-            AttackHitEvent->EventReceived.AddDynamic(this, &UARPGMeleeAttackAbility::AttackHitEvent);
-            AttackHitEvent->ReadyForActivation();
-            AttackEventHitReactionMap.Add(AttackHitEvent, i);
-            AttackHitEvents.Add(AttackHitEvent);
-        }
+  
+        WaitAttackHitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, ARPGGameplayTags::GameplayEvent_Attack_Hit, nullptr, false, true);
+        WaitAttackHitEventTask->EventReceived.AddDynamic(this, &UARPGMeleeAttackAbility::AttackHitEvent);
+        WaitAttackHitEventTask->ReadyForActivation();
 
         MontgeTask->ReadyForActivation();
 
@@ -110,39 +109,41 @@ void UARPGMeleeAttackAbility::Attack(uint8 ComboIndex)
 
 void UARPGMeleeAttackAbility::AttackHitEvent(FGameplayEventData Payload)
 {
-     
-     if (AttackHitEvents.IsEmpty())
-     {
-         return;
-     }
-
-     if (!AttackEventHitReactionMap.Contains(AttackHitEvents[0]))
-     {
-         return;
-     }
-
-     CurrentHitReactionIdex = AttackEventHitReactionMap[AttackHitEvents[0]];
 
      if (const UComboDataAsset* ComboDataAsset = CastChecked<UComboDataAsset>(Payload.ContextHandle.GetSourceObject()))
      {
          if (!ComboDataAsset->ComboInfos.IsValidIndex(CurrentActivateComboIndex))
          {
+             FString ComboIndexDebugText = FString::Printf(TEXT("CurrentActivateComboIndex is not vaild  : %d"), CurrentActivateComboIndex);
+
+             GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, ComboIndexDebugText);
+
              return;
          }
          if (!ComboDataAsset->ComboInfos[CurrentActivateComboIndex].HitReactionInfos.IsValidIndex(CurrentHitReactionIdex))
          {
+             FString ComboIndexDebugText = FString::Printf(TEXT("HitReactionInfo is not vaild  : %d"), CurrentHitReactionIdex);
+
+             GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, ComboIndexDebugText);
+
+             //FString HitReactIndexDebugText = FString::Printf(TEXT("AttackAbility is not vaild HitReactIndex : %d"), CurrentHitReactionIdex);
+             //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, HitReactIndexDebugText);
              return;
          }
 
+         FString ComboIndexDebugText = FString::Printf(TEXT("CurrentActivateComboIndex Index: %d"), CurrentActivateComboIndex);
+         GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, ComboIndexDebugText);
+
+         FString HitReactIndexDebugText = FString::Printf(TEXT("HitReactionInfo Index : %d"), CurrentHitReactionIdex);
+         GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, HitReactIndexDebugText);
 
          FHitReactionInfo CurHitReaction = ComboDataAsset->ComboInfos[CurrentActivateComboIndex].HitReactionInfos[CurrentHitReactionIdex];
          TSubclassOf<UGameplayEffect> DamageClass = CurHitReaction.DamageEffect;
          FGameplayTag Direction = CurHitReaction.AttackDirection;
          UAbilitySystemComponent* TargetASC = GetAttackHitTargetASC(Payload.Target);
 
-         //MakeEffectContext()
          //Combo Index를 넘겨주기위해 Custom EffectContext를 제작하빈다.
-         
+      
          FGameplayEffectContextHandle ContextHandle = MakeEffectContext(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo());  //GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
          FARPGGameplayEffectContext* ARPGContext = static_cast<FARPGGameplayEffectContext*>(ContextHandle.Get());
          ARPGContext->ComboIndex = CurrentActivateComboIndex;
@@ -150,13 +151,21 @@ void UARPGMeleeAttackAbility::AttackHitEvent(FGameplayEventData Payload)
          ARPGContext->SetAbility(this);
          ARPGContext->AddSourceObject(ComboDataAsset);
 
-
          Payload.ContextHandle = ContextHandle;
          if (TargetASC && DamageClass)
          {
-             GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("AttackAbility - ApplyGameplayEffect To Target"));
+             GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, TEXT("AttackEffect To Target"));
              GetActorInfo().AbilitySystemComponent->ApplyGameplayEffectToTarget(DamageClass.GetDefaultObject(), TargetASC, 0.f, Payload.ContextHandle);
          }
+     }
+
+     if (CurrentActivateComboIndex == CurrentTryActivateComboIndex)
+     {
+         CurrentHitReactionIdex++;
+     }
+     else
+     {
+         CurrentHitReactionIdex = 0;
      }
 }
 
@@ -166,7 +175,7 @@ void UARPGMeleeAttackAbility::AddCanNextComboTag()
     {
         AddWaitTagTask->EndTask();
     }
-
+    
     WaitInputTask = UAbilityTask_WaitInputPress::WaitInputPress(this);
     WaitInputTask->OnPress.AddDynamic(this, &UARPGMeleeAttackAbility::NextAttackInputEvent);
     WaitInputTask->ReadyForActivation();
@@ -204,21 +213,28 @@ void UARPGMeleeAttackAbility::NextAttackInputEvent(float TimeWaited)
 
     if (AddWaitTagTask)
     {
-        UE_LOG(LogTemp, Warning, TEXT("InputTaskBinding :: AddWaitTagEndTask"));
         AddWaitTagTask->EndTask();
     }
 
     if (RemoveWaitTagTask)
     {
-        UE_LOG(LogTemp, Warning, TEXT("InputTaskBinding :: RemoveWaitTagEndTask"));
         RemoveWaitTagTask->EndTask();
+    }
+
+    if (WaitAttackHitEventTask)
+    {
+        WaitAttackHitEventTask->EndTask();
     }
 
     if (UComboDataAsset* ComboDataAsset = CastChecked<UComboDataAsset>(GetSourceObject(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo())))
     {
-        GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag("State.Attack.CanNextAttack"));
+
+        GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(ARPGGameplayTags::Status_Attack_CanNextAttack);
         // 다음 콤보 인덱스 설정
         CurrentTryActivateComboIndex = (CurrentTryActivateComboIndex + 1) % ComboDataAsset->ComboInfos.Num();
+
+        //다음 콤보의 히트리엑션 인덱스 재설정
+        CurrentHitReactionIdex = 0;
 
         // 다음 애니메이션 실행
         Attack(CurrentTryActivateComboIndex);

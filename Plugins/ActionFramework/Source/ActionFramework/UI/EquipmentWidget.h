@@ -39,8 +39,6 @@ private:
 	UFUNCTION()
 	void UpdateSlot(FGameplayTag ItemTypeTag, uint8 Index, const FSlotDisplayInfo& SlotInfo);
 
-	UFUNCTION()
-
 	virtual void WidgetPresenterSet();
 
 	UFUNCTION(Category = "UI")

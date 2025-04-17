@@ -5,6 +5,7 @@
 #include "ActionFramework/UI/ARPGUserWidget.h"
 #include "ActionFramework/UI/EscMenuWidget.h"
 #include "ActionFramework/UI/ARPGPresenter.h"
+#include "ActionFramework/UI/OverlayPresenter.h"
 #include "ActionFramework/ARPGGameplayTags.h"
 #include "AbilitySystemComponent.h"
 #include "AttributeSet.h"
@@ -47,13 +48,14 @@ void AARPGHUD::InitQuickWidget(APlayerController* PC, APlayerState* PS, UAbility
 
 void AARPGHUD::InitOverlayWidget(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
-	if (OverlayWidgetClass && OverlayPresenter)
+	if (OverlayWidgetClass && OverlayPresenterClass)
 	{
 		UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), OverlayWidgetClass);
 		OverlayWidget = Cast<UARPGUserWidget>(Widget);
 
 		FPresenterParams PresenterParams(PC, PS, ASC, AS, nullptr);
-		OverlayPresenter = GetPresenter(PresenterParams, OverlayPresenterClass);
+		OverlayPresenter = GetOverlayPresenter(PresenterParams);
+		OverlayPresenter->SetView(OverlayWidget);
 		OverlayWidget->SetPresenter(OverlayPresenter);
 		OverlayWidget->AddToViewport();
 		OverlayPresenter->BroadcastInitialValues();
@@ -71,6 +73,19 @@ void AARPGHUD::InitMenuWidget(APlayerController* PC, APlayerState* PS, UAbilityS
 		//EscPresenter = GetPresenter(PresenterParams, EscPresenterClass);
 		//EscWidget->SetPresenter(EquipmentPresenter);
 	}
+}
+
+UOverlayPresenter* AARPGHUD::GetOverlayPresenter(const FPresenterParams& PresenterParams)
+{
+	if (OverlayPresenter == nullptr)
+	{
+		OverlayPresenter = NewObject<UOverlayPresenter>(this, OverlayPresenterClass);
+		OverlayPresenter->SetPresenterParams(PresenterParams);
+		OverlayPresenter->BindCallBacksToDependencies();
+		return OverlayPresenter;
+	}
+	
+	return OverlayPresenter;
 }
 
 bool AARPGHUD::ToggleMenuWidget()

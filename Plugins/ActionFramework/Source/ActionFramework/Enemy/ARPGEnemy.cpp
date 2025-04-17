@@ -12,6 +12,7 @@
 #include "ActionFramework/ARPGGameplayTags.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "GameplayEffect.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -30,19 +31,32 @@ AARPGEnemy::AARPGEnemy()
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 
 	AttributeSet = CreateDefaultSubobject<UARPGAttributeSet>("AttributeSet");
-	ASC->AddAttributeSetSubobject<UAttributeSet>(AttributeSet);
-
+	ASC->AddAttributeSetSubobject<UAttributeSet>(AttributeSet.Get());
 }
 
 void AARPGEnemy::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+	if (ASC)
+	{
+		const UARPGAttributeSet* Attribute = ASC->GetSet<UARPGAttributeSet>();
+		ASC->InitAbilityActorInfo(this, this);
+		InitDefaultAttribute();
+	}
+
 
 	ARPGAIController = Cast<AARPGAIController>(NewController);
-	ARPGAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
-	ARPGAIController->RunBehaviorTree(BehaviorTree);
-
-	ARPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), false);
+	if (ARPGAIController)
+	{
+		UBlackboardComponent* BBComp = ARPGAIController->GetBlackboardComponent();
+		if (BBComp && BehaviorTree)
+		{
+			BBComp->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
+			ARPGAIController->RunBehaviorTree(BehaviorTree);
+			ARPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), false);
+			
+		}
+	}
 }
 
 AActor* AARPGEnemy::GetEquippedWeapon_Implementation()
@@ -53,6 +67,16 @@ AActor* AARPGEnemy::GetEquippedWeapon_Implementation()
 UAbilitySystemComponent* AARPGEnemy::GetAbilitySystemComponent() const
 {
 	return ASC;
+}
+
+void AARPGEnemy::SetCombatTarget(AActor* NewCombatTarget)
+{
+	CombatTarget = NewCombatTarget;
+}
+
+AActor* AARPGEnemy::GetCombatTarget()
+{
+	return CombatTarget;
 }
 
 // Called when the game starts or when spawned
@@ -70,34 +94,27 @@ void AARPGEnemy::BeginPlay()
 				AnimInstance->InitializeWithAbilitySystem(ASC);
 			}
 		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("GetMesh -> GetAnimInstance nullptr"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GetMesh nullptr"));
+
 	}
 
 	ASC->RegisterGameplayTagEvent(ARPGGameplayTags::GameplayEvent_HitReact, EGameplayTagEventType::NewOrRemoved).AddUObject(
 		this,
 		&ThisClass::HitReactTagChanged
 	);
+
+	//전투 상태에 돌입했을 때의 대한 이벤트를 만들도록 합니다.
+
+	//전투 상태에 돌입했다면 체력을 보여지도록 합니다
+		//1. 부모 상속을 이용해 보스, 노멀 몬스터의 체력을 보여지는걸 다르게 구현한다 - (현재 보스는 플레이어의 hud에 보이도록, 노멀은 자기 위에 보여지도록)
+		//2. 인터페이스를 이용해.
+
+
 }
 
 void AARPGEnemy::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	if (ASC)
-	{
-		const UARPGAttributeSet* Attribute = ASC->GetSet<UARPGAttributeSet>();
-		ASC->InitAbilityActorInfo(this, this);
-		if (Attribute)
-		{
-			ASC->GetGameplayAttributeValueChangeDelegate(Attribute->GetHealthAttribute()).AddUObject(this, &AARPGEnemy::OnHealthChange);
-		}
-	}
+
 }
 
 void AARPGEnemy::Dead_Implementation()
@@ -127,10 +144,7 @@ void AARPGEnemy::OnHealthChange(const FOnAttributeChangeData& Data)
 	}
 	else if (Data.NewValue <= Data.OldValue)
 	{
-		// 1번. HitReactionComponent->ExecuteHitReaction(공격방향태그가 매개변수로 들어가야합니다.);
-		// 2번 ASC->TryActivateAbility를 통해 HitReactionAbility를 실행시킵니다.(하지만 여기서도 HitReactionComponent를 통해 처리할것이기 떄문에 태그가 필요합니다.)
 
-		//3번 괜찮은방법 뭐 없나?
 	}
 	
 }
@@ -141,4 +155,18 @@ void AARPGEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewTag
 
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed;
 }
+
+void AARPGEnemy::InitDefaultAttribute()
+{
+	check(IsValid(GetAbilitySystemComponent()));
+	check(DefaultAttributeEffect);
+	FGameplayEffectContextHandle ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
+	ContextHandle.AddSourceObject(this);
+	ContextHandle.AddInstigator(this,this);
+	const FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(DefaultAttributeEffect, 1.f, ContextHandle);
+	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
+	//ASC->ApplyGameplayEffectToSelf(DefaultAttributeEffect->GetDefaultObject,)
+	//ASC->InitStats()
+	UE_LOG(LogTemp, Warning, TEXT("GameplayEffectToTarget - InitEnemyDefault Attr %s"), *GetName());
+}	
 

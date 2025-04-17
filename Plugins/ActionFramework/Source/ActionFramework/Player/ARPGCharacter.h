@@ -20,6 +20,7 @@ class UInputAction;
 class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayAbility;
+class UGameplayEffect;
 
 UCLASS()
 class ACTIONFRAMEWORK_API AARPGCharacter : public ACharacter ,public IAbilitySystemInterface , public ICombatable, public IGameplayTagAssetInterface
@@ -45,7 +46,7 @@ protected:
 
 private:
 	void InitAbilityActorInfo();
-
+	void InitDefaultAttribute();
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class UARPGSpringArmComponent* GetSpringArmComp() const { return TargetingCameraSpringArm; }
@@ -53,9 +54,7 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	virtual AActor* GetEquippedWeapon_Implementation() override;
-	virtual void ToggleTargeting(bool bEnable) override;
 	UAbilitySystemComponent* GetAbilitySystemComponent() const;
-
 private:
 	void AddCharacterAbilities();
 
@@ -73,11 +72,15 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "ARPGCharacter")
 	TObjectPtr<UInventoryComponent> InventoryComponent;
 
+	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
-	
+	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	TArray<TSubclassOf<UGameplayAbility>> StartAbilities;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<UGameplayEffect> DefaultAttributeEffect;
 };

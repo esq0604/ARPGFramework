@@ -4,6 +4,10 @@
 #include "ActionFramework/AbilitySystem/ARPGHitReactionAbility.h"
 #include "ActionFramework/ARPGGameplayTags.h"
 #include "ActionFramework/AbilitySystem/ARPGGameplayEffectContext.h"
+#include "ActionFramework/Components/HitReactionComponent.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "ActionFramework/Datas/ComboDataAsset.h"
+
 UARPGHitReactionAbility::UARPGHitReactionAbility()
 {
 	FAbilityTriggerData Data;
@@ -15,17 +19,66 @@ void UARPGHitReactionAbility::ActivateAbility(const FGameplayAbilitySpecHandle H
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (CommitAbility(Handle, ActorInfo, ActivationInfo))
-	{
-		if (TriggerEventData->ContextHandle.IsValid())
-		{
-			FGameplayEffectContextHandle ContextHandle = TriggerEventData->ContextHandle;
-			FARPGGameplayEffectContext* EffectContext = static_cast<FARPGGameplayEffectContext*>(ContextHandle.Get());
+    if (!CommitAbility(Handle, ActorInfo, ActivationInfo) || !TriggerEventData || !TriggerEventData->ContextHandle.IsValid())
+    {
+        return;
+    }
 
-			FString ComboIndexDebugText = FString::Printf(TEXT("ARPGEffectContext Get ComboIndex : %d"), EffectContext->ComboIndex);
-			FString HitReactIndexDebugText = FString::Printf(TEXT("ARPGEffectContext Get HitReactIndex : %d"), EffectContext->HitReactIndex);
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, ComboIndexDebugText);
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, HitReactIndexDebugText);
-		}
-	}
+
+    FGameplayEffectContextHandle ContextHandle = TriggerEventData->ContextHandle;
+    FARPGGameplayEffectContext* EffectContext = static_cast<FARPGGameplayEffectContext*>(ContextHandle.Get());
+    if (!EffectContext)
+    {
+        return;
+    }
+
+    UComboDataAsset* ComboDataAsset = Cast<UComboDataAsset>(EffectContext->GetSourceObject());
+    if (!ComboDataAsset)
+    {
+        return;
+    }
+
+    const FGameplayTag AttackDirectionTag = ComboDataAsset->ComboInfos[EffectContext->ComboIndex]
+        .HitReactionInfos[EffectContext->HitReactIndex]
+        .AttackDirection;
+    FString DirectionTagDebugText = FString::Printf(TEXT("Direction Tag Name : %s"), *AttackDirectionTag.ToString());
+
+    GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, DirectionTagDebugText);
+
+
+    if (UHitReactionComponent* HitReactComp = GetHitReactionComponent(GetOwningActorFromActorInfo()))
+    {
+        UAnimMontage* HitReactMontage = HitReactComp->GetHitReaction(AttackDirectionTag);
+        if (HitReactMontage)
+        {
+            MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, FName("None"), HitReactMontage);
+            MontageTask->OnCompleted.AddDynamic(this, &UARPGHitReactionAbility::MontageFinish);
+            MontageTask->OnInterrupted.AddDynamic(this, &UARPGHitReactionAbility::MontageInterrupted);
+            MontageTask->OnCancelled.AddDynamic(this, &UARPGHitReactionAbility::MontageCanceled);
+            MontageTask->ReadyForActivation();
+        }
+    }
+}
+
+UHitReactionComponent* UARPGHitReactionAbility::GetHitReactionComponent(AActor* OwnerActor) const
+{
+    return OwnerActor ? Cast<UHitReactionComponent>(OwnerActor->GetComponentByClass(UHitReactionComponent::StaticClass())) : nullptr;
+}
+
+void UARPGHitReactionAbility::MontageFinish()
+{
+    EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfoRef(), true, false);
+
+}
+
+void UARPGHitReactionAbility::MontageCanceled()
+{
+    CancelAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfoRef(), true);
+
+}
+
+void UARPGHitReactionAbility::MontageInterrupted()
+{
+    CancelAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfoRef(), true);
+
 }

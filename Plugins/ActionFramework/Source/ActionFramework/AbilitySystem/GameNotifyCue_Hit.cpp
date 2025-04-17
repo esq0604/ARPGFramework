@@ -26,7 +26,7 @@ bool UGameNotifyCue_Hit::OnExecute_Implementation(AActor* MyTarget, const FGamep
 	if (FindComp)
 	{
 		UHitReactionComponent* HitReactComp = Cast<UHitReactionComponent>(FindComp);
-		HitReactComp->ExecuteHitReaction(AttackDirection);
+		//HitReactComp->ExecuteHitReaction(AttackDirection);
 	}
 
 	return Super::OnExecute_Implementation(MyTarget, Parameters);

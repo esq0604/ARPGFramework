@@ -9,6 +9,9 @@
 /**
  * 
  */
+class UHitReactionComponent;
+class UAbilityTask_PlayMontageAndWait;
+
 UCLASS()
 class ACTIONFRAMEWORK_API UARPGHitReactionAbility : public UARPGAbility
 {
@@ -19,5 +22,17 @@ public:
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
-	
+private:
+	UHitReactionComponent* GetHitReactionComponent(AActor* OwnerActor) const;
+
+	TObjectPtr<UAbilityTask_PlayMontageAndWait> MontageTask;
+
+	UFUNCTION()
+	void MontageFinish();
+
+	UFUNCTION()
+	void MontageCanceled();
+
+	UFUNCTION()
+	void MontageInterrupted();
 };

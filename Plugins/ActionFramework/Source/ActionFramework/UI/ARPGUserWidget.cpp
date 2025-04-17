@@ -3,7 +3,7 @@
 
 #include "ActionFramework/UI/ARPGUserWidget.h"
 
-void UARPGUserWidget::SetPresenter(UARPGPresenter* NewPresenter)
+void UARPGUserWidget::SetPresenter(UObject* NewPresenter)
 {
 	Presenter = NewPresenter;
 	WidgetPresenterSet();

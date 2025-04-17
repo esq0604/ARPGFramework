@@ -78,7 +78,7 @@ private:
 	UAbilityTask_WaitInputPress* WaitInputTask;
 	UAbilityTask_WaitGameplayTagAdded* AddWaitTagTask;
 	UAbilityTask_WaitGameplayTagRemoved* RemoveWaitTagTask;
-
+	UAbilityTask_WaitGameplayEvent* WaitAttackHitEventTask;
 	uint8 CurrentHitReactionIdex{ 0 };
 	uint8 CurrentActivateComboIndex{ 0 };
 	uint8 CurrentTryActivateComboIndex{ 0 };

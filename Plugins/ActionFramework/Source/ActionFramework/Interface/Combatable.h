@@ -28,4 +28,8 @@ public:
 	AActor* GetEquippedWeapon();
 	virtual AActor* GetEquippedWeapon_Implementation() = 0;
 	virtual void ToggleTargeting(bool bEnable);
+	virtual void ToggleHealth(bool bEnable);
+	virtual void TogglePosture(bool bEnable);
+	virtual void SetCombatTarget(AActor* NewCombatTarget);
+	virtual AActor* GetCombatTarget();
 };

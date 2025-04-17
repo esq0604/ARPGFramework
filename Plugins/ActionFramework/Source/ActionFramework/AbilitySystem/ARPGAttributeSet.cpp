@@ -21,9 +21,9 @@ void UARPGAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, 
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxHealth());
 	}
-	if (Attribute == GetStaminaAttribute())
+	if (Attribute == GetPostureAttribute())
 	{
-		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxStamina());
+		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxPosture());
 	}
 }
 
@@ -33,30 +33,33 @@ bool UARPGAttributeSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData&
 	//Data.EffectSpec
 	FEffectProperties Properties;
 	SetEffectProperties(Data, Properties);
-	FVector SourceForward = Properties.SourceCharacter->GetActorForwardVector().GetSafeNormal();
-	FVector ToTarget = (Properties.TargetCharacter->GetActorLocation() - Properties.SourceCharacter->GetActorLocation()).GetSafeNormal();
-	float DotProduct = FVector::DotProduct(SourceForward, ToTarget);
-
-	if (Properties.TargetASC->HasMatchingGameplayTag(ARPGGameplayTags::Status_Parry) && DotProduct>0.f)
+	if (Properties.SourceCharacter && Properties.TargetCharacter)
 	{
-		
-		FGameplayEventData Payload;
-		Payload.Instigator = Properties.SourceCharacter;
-		Payload.Target = Properties.TargetCharacter;
-		Payload.ContextHandle = Properties.EffectContextHandle;
-		Properties.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_Parry,&Payload);
+		FVector SourceForward = Properties.SourceCharacter->GetActorForwardVector().GetSafeNormal();
+		FVector ToTarget = (Properties.TargetCharacter->GetActorLocation() - Properties.SourceCharacter->GetActorLocation()).GetSafeNormal();
+		float DotProduct = FVector::DotProduct(SourceForward, ToTarget);
 
-		return bResult;
+		//정면 및 Parry상태라면
+		if (Properties.TargetASC->HasMatchingGameplayTag(ARPGGameplayTags::Status_Parry) && DotProduct > 0.f)
+		{
+			FGameplayEventData Payload;
+			Payload.Instigator = Properties.SourceCharacter;
+			Payload.Target = Properties.TargetCharacter;
+			Payload.ContextHandle = Properties.EffectContextHandle;
+			Properties.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_Parry, &Payload);
+
+			return bResult;
+		}
+		//정면 및 방어상태라면
+		else if (Properties.TargetASC->HasMatchingGameplayTag(ARPGGameplayTags::Status_Block) && DotProduct > 0.f)
+		{
+			FGameplayEventData Payload;
+			Payload.ContextHandle = Properties.EffectContextHandle;
+			Properties.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_Block, &Payload);
+
+			return bResult = true;
+		}
 	}
-	else if (Properties.TargetASC->HasMatchingGameplayTag(ARPGGameplayTags::Status_Block) && DotProduct > 0.f)
-	{
-		FGameplayEventData Payload;
-		Payload.ContextHandle = Properties.EffectContextHandle;
-		Properties.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_Block, &Payload);
-
-		return bResult = true;
-	}
-
 
 	return bResult = true;
 }
@@ -69,15 +72,16 @@ void UARPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	
 	FEffectProperties Properties;
 	SetEffectProperties(Data, Properties);
+	if (Properties.TargetCharacter && Properties.SourceCharacter)
+	{
+		FGameplayEventData Payload;
+		Payload.Instigator = Properties.SourceCharacter;
+		Payload.Target = Properties.TargetCharacter;
+		Payload.ContextHandle = Properties.EffectContextHandle;
 
-	FGameplayEventData Payload;
-	Payload.Instigator = Properties.SourceCharacter;
-	Payload.Target = Properties.TargetCharacter;
-	Payload.ContextHandle = Properties.EffectContextHandle;
-
-	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, TEXT("GameplayEvent - Hit React"));
-	Properties.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_HitReact, &Payload);
-
+		//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, TEXT("Handle GameplayEvent Hit React"));
+		Properties.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_HitReact, &Payload);
+	}
 }
 
 void UARPGAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
@@ -89,10 +93,10 @@ void UARPGAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute,
 		SetHealth(GetMaxHealth());
 		bTopOffHealth = false;
 	}
-	if (Attribute == GetMaxStaminaAttribute() && bTopOffStamina)
+	if (Attribute == GetMaxPostureAttribute() && bTopOffPosture)
 	{
-		SetStamina(GetMaxStamina());
-		bTopOffStamina = false;
+		SetPosture(GetMaxPosture());
+		bTopOffPosture = false;
 	}
 }
 
@@ -115,6 +119,7 @@ void UARPGAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData
 		if (Props.SourceController)
 		{
 			Props.SourceCharacter = Cast<ACharacter>(Props.SourceController->GetPawn());
+			//SourceController->GetControlled
 		}
 	}
 

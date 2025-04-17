@@ -8,6 +8,8 @@
 
 class UBlackboardComponent;
 class UBehaviorTreeComponent;
+class UAISenseConfig_Sight;
+
 /**
  * 
  */
@@ -19,8 +21,16 @@ class ACTIONFRAMEWORK_API AARPGAIController : public AAIController
 public:
 	AARPGAIController();
 
-
+	UFUNCTION()
+	void OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors);
+protected:
+	virtual void OnPossess(APawn* InPawn) override;
 private:
-
 	TObjectPtr<UBehaviorTreeComponent> BehaviorTreeComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAIPerceptionComponent> AIPerceptionComponent;
+
+	UPROPERTY()
+	TObjectPtr<UAISenseConfig_Sight> SightConfig;
 };

@@ -68,7 +68,6 @@ private:
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Health")
 	FGameplayAttributeData Health;
-
 	ATTRIBUTE_ACCESSORS(UARPGAttributeSet, Health)
 
 	UPROPERTY(BlueprintReadOnly, Category = "MaxHealth")
@@ -79,14 +78,14 @@ public:
 	FGameplayAttributeData Damage;
 	ATTRIBUTE_ACCESSORS(UARPGAttributeSet, Damage)
 
-	UPROPERTY(BlueprintReadOnly, Category = "Stamina")
-	FGameplayAttributeData Stamina;
-	ATTRIBUTE_ACCESSORS(UARPGAttributeSet, Stamina)
+	UPROPERTY(BlueprintReadOnly, Category = "Posture")
+	FGameplayAttributeData Posture;
+	ATTRIBUTE_ACCESSORS(UARPGAttributeSet, Posture)
 
-	UPROPERTY(BlueprintReadOnly, Category = "MaxStamina")
-	FGameplayAttributeData MaxStamina;
-	ATTRIBUTE_ACCESSORS(UARPGAttributeSet, MaxStamina)
 
+	UPROPERTY(BlueprintReadOnly, Category = "MaxPosture")
+	FGameplayAttributeData MaxPosture;
+	ATTRIBUTE_ACCESSORS(UARPGAttributeSet, MaxPosture)
 		/*
 	 * Meta Attributes
 	 */
@@ -96,5 +95,5 @@ public:
 	ATTRIBUTE_ACCESSORS(UARPGAttributeSet, IncomingDamage);
 private:
 	bool bTopOffHealth = false;
-	bool bTopOffStamina = false;
+	bool bTopOffPosture = false;
 };
