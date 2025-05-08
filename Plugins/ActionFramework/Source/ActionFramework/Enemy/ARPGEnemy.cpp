@@ -10,6 +10,8 @@
 #include "ActionFramework/Components/TargetingComponent.h"
 #include "ActionFramework/Enemy/ARPGAIController.h"
 #include "ActionFramework/ARPGGameplayTags.h"
+
+#include "Components/WidgetComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "GameplayEffect.h"
@@ -24,7 +26,10 @@ AARPGEnemy::AARPGEnemy()
 
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	HitReactionComponent = CreateDefaultSubobject<UHitReactionComponent>(TEXT("HitReactionComponent"));
-
+	TargetWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("TargetWidgetComponent"));
+	TargetWidgetComponent->SetupAttachment(RootComponent);
+	TargetingComponent = CreateDefaultSubobject<UTargetingComponent>(TEXT("TargetingComponent"));
+	TargetingComponent->SetupAttachment(RootComponent);
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = false;
@@ -62,6 +67,14 @@ void AARPGEnemy::PossessedBy(AController* NewController)
 AActor* AARPGEnemy::GetEquippedWeapon_Implementation()
 {
 	return WeaponInstance;
+}
+
+void AARPGEnemy::ToggleTargeting(bool bEnable)
+{
+	if (TargetWidgetComponent)
+	{
+		TargetWidgetComponent->SetVisibility(bEnable); // 락온 마커 표시 (공통)
+	}
 }
 
 UAbilitySystemComponent* AARPGEnemy::GetAbilitySystemComponent() const
@@ -102,6 +115,11 @@ void AARPGEnemy::BeginPlay()
 		&ThisClass::HitReactTagChanged
 	);
 
+	if(TargetWidgetComponent)
+	{
+		TargetWidgetComponent->InitWidget();
+		TargetWidgetComponent->SetVisibility(false);
+	}
 	//전투 상태에 돌입했을 때의 대한 이벤트를 만들도록 합니다.
 
 	//전투 상태에 돌입했다면 체력을 보여지도록 합니다

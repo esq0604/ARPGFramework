@@ -77,6 +77,7 @@ void AARPGPlayerController::SetupInputComponent()
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Move, ETriggerEvent::Triggered, this, &ThisClass::Move,false);
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Look, ETriggerEvent::Triggered, this, &ThisClass::Look, false);
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Esc, ETriggerEvent::Started, this, &ThisClass::ToggleEscWidget, false);
+	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Tab, ETriggerEvent::Started, this, &ThisClass::TargetLock, false);
 }
 
 void AARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)

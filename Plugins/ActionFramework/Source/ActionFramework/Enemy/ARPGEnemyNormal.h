@@ -23,8 +23,8 @@ class ACTIONFRAMEWORK_API AARPGEnemyNormal : public AARPGEnemy
 	
 public:
 	AARPGEnemyNormal();
-
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	virtual void ToggleTargeting(bool bEnable) override;
 
 protected:
 	virtual void BeginPlay() override;

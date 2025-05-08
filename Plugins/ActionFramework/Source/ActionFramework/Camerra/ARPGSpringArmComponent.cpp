@@ -147,6 +147,9 @@ void UARPGSpringArmComponent::ToggleSoftLock()
 void UARPGSpringArmComponent::LockToTarget(UTargetingComponent* NewTargetComponent)
 {
 		CameraTarget = NewTargetComponent;
+
+		// Show lock-on HUD
+		CameraTarget->HandleTargetingStateChanged(true);
 		bEnableCameraRotationLag = true;
 		//CameraLagSpeed = TargetCameraLagSpeed;
 		UActorComponent* ActorComp = GetOwner()->GetComponentByClass(UCharacterMovementComponent::StaticClass());
@@ -170,7 +173,7 @@ void UARPGSpringArmComponent::BreakTargetLock()
 	if (IsCameraLockedToTarget())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BreakTargetLock"));
-		//CameraTarget->SetVisibility(false);
+		CameraTarget->HandleTargetingStateChanged(false);
 		CameraTarget = nullptr;
 		//CameraLagSpeed = CommonCameraLagSpeed;
 		///GetOwner()->GetInstigatorController()->SetControlRotation(GetOwner()->GetActorRotation());
@@ -283,6 +286,12 @@ void UARPGSpringArmComponent::SwitchTarget(ECameraDirection SwitchDirection)
 			BestDotIdx = i;
 	}
 
+	//기존 타겟 UI 및 상태 해제
+	if (CameraTarget)
+	{
+		CameraTarget->HandleTargetingStateChanged(false);
+	}
+
 	LockToTarget(ViableTargets[BestDotIdx]);
 }
 
@@ -291,7 +300,7 @@ TArray<UTargetingComponent*> UARPGSpringArmComponent::GetTargetComponents()
 	TArray<UPrimitiveComponent*> TargetPrims;
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes = { EObjectTypeQuery::ObjectTypeQuery2 }; // World dynamic object type
 
-	// Overlap check for targetable component
+	//타겟팅 컴포넌트를 찾습니다.
 	UKismetSystemLibrary::SphereOverlapComponents(GetOwner(), GetComponentLocation(), MaxTargetLockDistance, ObjectTypes, UTargetingComponent::StaticClass(), TArray<AActor*>{GetOwner()}, TargetPrims);
 
 	TArray<UTargetingComponent*> TargetComps;

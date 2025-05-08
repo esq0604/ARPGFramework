@@ -17,6 +17,7 @@ class UHitReactionComponent;
 class UGameplayEffect;
 class AWeaponItem;
 class UBehaviorTree;
+class UWidgetComponent;
 class AARPGAIController;
 
 //몬스터가 체력이 보여지는 조건
@@ -42,6 +43,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual AActor* GetEquippedWeapon_Implementation() override;
+	virtual void ToggleTargeting(bool bEnable) override;
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
@@ -90,10 +92,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "ARPGEnemy")
 	TObjectPtr<UAttributeSet> AttributeSet;
 
-
-private:
-	UPROPERTY(EditDefaultsOnly,Category="ARPGEnemy")
+	UPROPERTY(EditDefaultsOnly, Category = "ARPGEnemy") //플레이어가 감지하기 위한 컴포넌트 입니다
 	TObjectPtr<UTargetingComponent> TargetingComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "ARPGEnemy") //플레이어가 타게팅시 보여질 ui를 위한 컴포넌트 입니다.
+	TObjectPtr<UWidgetComponent> TargetWidgetComponent;
+private:
 	
 	UPROPERTY(EditDefaultsOnly,Category="ARPGEnemy")
 	TObjectPtr<UHitReactionComponent> HitReactionComponent;

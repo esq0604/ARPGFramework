@@ -61,8 +61,16 @@ namespace ARPGGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Move, "Input.Move", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Look, "Input.Look", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Esc, "Input.Esc", "Input type tag ");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Tab, "Input.Tab", "Input type tag ");
+
 
 	//GameplayCue
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayCue_Parry, "GameplayCue.Parry", "GameplayCue.Parry Tag");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayCue_Block, "GameplayCue.Block", "GameplayCue.Block Tag");
+
+
+	//UI State
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(StatusBar_State_None, "StatusBar.State.None", "StatusBar UI State Type");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(StatusBar_State_Targeted, "StatusBar.State.Targeted", "StatusBar UI State Type");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(StatusBar_State_DamageResponse, "StatusBar.State.DamageResponse", "StatusBar UI State Type");
 }

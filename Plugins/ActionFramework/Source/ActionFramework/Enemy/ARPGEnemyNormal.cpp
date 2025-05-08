@@ -4,6 +4,7 @@
 #include "ActionFramework/Enemy/ARPGEnemyNormal.h"
 #include "ActionFramework/UI/ARPGUserWidget.h"
 #include "ActionFramework/AbilitySystem/ARPGAttributeSet.h"
+#include "ActionFramework/UI/EnemyStatusWidget.h"
 #include "Components/WidgetComponent.h"
 
 AARPGEnemyNormal::AARPGEnemyNormal()
@@ -17,21 +18,23 @@ UAbilitySystemComponent* AARPGEnemyNormal::GetAbilitySystemComponent() const
 	return ASC;
 }
 
+void AARPGEnemyNormal::ToggleTargeting(bool bEnable)
+{
+	// EnemyStatusBar가시성 설정.
+	Super::ToggleTargeting(bEnable); // 공통 락온 마커 표시
+
+	if (UEnemyStatusWidget* StatusWidget = Cast<UEnemyStatusWidget>(EnemyStatusBar->GetUserWidgetObject()))
+	{
+		StatusWidget->SetTargetingState(bEnable); // 체력 바 표시
+	}
+}
+
 
 
 void AARPGEnemyNormal::BeginPlay()
 {
 	Super::BeginPlay();
-	//InitDefaultAttribute();
 
-	//if (const UARPGAttributeSet* AS = Cast<UARPGAttributeSet>(AttributeSet))
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Normal Enemy Health %f"), AS->GetHealth());
-	//	OnHealthChanged.Broadcast(AS->GetHealth());
-	//	OnPostureChanged.Broadcast(AS->GetPosture());
-	//	OnMaxHealthChanged.Broadcast(AS->GetMaxHealth());
-	//	OnMaxPostureChanged.Broadcast(AS->GetMaxPosture());
-	//}
 }
 
 
@@ -47,7 +50,6 @@ void AARPGEnemyNormal::PossessedBy(AController* NewController)
 		if (UARPGUserWidget* ARPGUserWidget = Cast<UARPGUserWidget>(Widget))
 		{
 			ARPGUserWidget->SetPresenter(this);
-			ARPGUserWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 
@@ -82,11 +84,7 @@ void AARPGEnemyNormal::PossessedBy(AController* NewController)
 			OnMaxPostureChanged.Broadcast(Data.NewValue);
 		}
 		);
-
-
-
 	}
-
 
 	//if (Widget)
 	//	Widget->SetVisibility(ESlateVisibility::Hidden);

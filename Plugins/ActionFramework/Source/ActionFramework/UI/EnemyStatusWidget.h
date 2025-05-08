@@ -4,19 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "ActionFramework/UI/ARPGUserWidget.h"
+#include "GameplayTagContainer.h"
 #include "EnemyStatusWidget.generated.h"
 
 /**
  * 
  */
 class UGaugeBar;
-
+struct FGameplayTag;
 
 UCLASS()
 class ACTIONFRAMEWORK_API UEnemyStatusWidget : public UARPGUserWidget
 {
 	GENERATED_BODY()
-	
+public:
+	UEnemyStatusWidget();
+
+	virtual void NativeConstruct() override;
+
+	void SetTargetingState(bool bTargeting);
 
 protected:
 	void ChangeVisibility();
@@ -38,8 +44,14 @@ protected:
 	UFUNCTION()
 	void StatusBarGaugeVisibilityChange(float NewVal);
 
+	void HidePostureStatusBar();
+	void HideHealthBar();
 
 	void SetBarPercent(UGaugeBar* Widget, float Val , float MaxVal);
+	void SetStatusBarState(const FGameplayTag& NewState);
+	void UpdateStatusBarVisibility();
+	void NotifyDamaged();
+	void TryHideStatusBar();
 private:
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget))
 	TObjectPtr<UGaugeBar> HealthBar;
@@ -48,6 +60,12 @@ private:
 	TObjectPtr<UGaugeBar> PostureBar;
 
 	FTimerHandle StatusBarHideTimerHandle;
+
+	FGameplayTag CurrentState;
+
+	bool StatusBarHidden;
+	UPROPERTY(EditDefaultsOnly)
+	float StatusBarAutoHideDelay = 3.f;
 
 	float Health;
 	float MaxHealth;

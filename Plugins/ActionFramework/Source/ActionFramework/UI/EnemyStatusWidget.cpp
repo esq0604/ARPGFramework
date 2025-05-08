@@ -4,14 +4,20 @@
 #include "ActionFramework/UI/EnemyStatusWidget.h"
 #include "ActionFramework/UI/GaugeBar.h"
 #include "ActionFramework/Enemy/ARPGEnemy.h"
+#include "ActionFramework/ARPGGameplayTags.h"
+
+UEnemyStatusWidget::UEnemyStatusWidget()
+{
+}
+
+void UEnemyStatusWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+	SetTargetingState(false);
+}
 
 void UEnemyStatusWidget::ChangeVisibility()
 {
-	if (GetVisibility() == ESlateVisibility::Hidden)
-	{
-		SetVisibility(ESlateVisibility::Visible);
-
-	}
 
 }
 
@@ -41,9 +47,8 @@ void UEnemyStatusWidget::WidgetPresenterSet()
 void UEnemyStatusWidget::OnEnemyHealthChanged(float NewVal)
 {
 	Health = NewVal;
-	UE_LOG(LogTemp, Warning, TEXT("OnEnemyHealthChanged, Widget"));
-	
 	SetBarPercent(HealthBar, Health, MaxHealth);
+	NotifyDamaged();
 }
 
 void UEnemyStatusWidget::OnEnemyPostureChanged(float NewVal)
@@ -68,22 +73,70 @@ void UEnemyStatusWidget::StatusBarGaugeVisibilityChange(float NewVal)
 {
 	if (NewVal > 0.f)
 	{
-		HealthBar->SetVisibility(ESlateVisibility::Visible);
-		GetWorld()->GetTimerManager().ClearTimer(StatusBarHideTimerHandle);
-		bBossPostureHidden = false;
-	}
-	else if (!bBossPostureHidden)
-	{
-		bBossPostureHidden = true;
-		GetWorld()->GetTimerManager().SetTimer(StatusBarHideTimerHandle, this, &UEnemyStatusWidget::StatusBarGaugeVisibilityChange, PostureAutoHideDelay, false);
+		NotifyDamaged();
 	}
 }
 
-void UEnemyStatusWidget::PostureGaugeVisibilityChange(float NewVal)
+void UEnemyStatusWidget::HidePostureStatusBar()
 {
 }
+
+void UEnemyStatusWidget::HideHealthBar()
+{
+}
+
+
 
 void UEnemyStatusWidget::SetBarPercent(UGaugeBar* Widget, float Val, float MaxVal)
 {
 	Widget->SetBarPercent(Val/MaxVal);
+}
+
+void UEnemyStatusWidget::SetStatusBarState(const FGameplayTag& NewState)
+{
+	if (NewState != CurrentState)
+	{
+		CurrentState = NewState;
+		UpdateStatusBarVisibility();
+	}
+}
+
+void UEnemyStatusWidget::UpdateStatusBarVisibility()
+{
+	const bool bVisible = !CurrentState.MatchesTagExact(ARPGGameplayTags::StatusBar_State_None);
+	SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+
+	UE_LOG(LogTemp, Warning, TEXT("StatusBar visibility updated to: %s (%s)"),
+		bVisible ? TEXT("Visible") : TEXT("Hidden"),
+		*CurrentState.ToString());
+}
+
+void UEnemyStatusWidget::SetTargetingState(bool bTargeting)
+{
+	if (bTargeting)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(StatusBarHideTimerHandle);
+		SetStatusBarState(ARPGGameplayTags::StatusBar_State_Targeted);
+	}
+	else
+	{
+		SetStatusBarState(ARPGGameplayTags::StatusBar_State_None);
+	}
+}
+
+void UEnemyStatusWidget::NotifyDamaged()
+{
+	// 타겟 상태면 유지
+	if (CurrentState == ARPGGameplayTags::StatusBar_State_Targeted) return;
+
+	SetStatusBarState(ARPGGameplayTags::StatusBar_State_DamageResponse);
+	GetWorld()->GetTimerManager().SetTimer(StatusBarHideTimerHandle, this, &UEnemyStatusWidget::TryHideStatusBar, StatusBarAutoHideDelay, false);
+}
+
+void UEnemyStatusWidget::TryHideStatusBar()
+{
+	if (CurrentState == ARPGGameplayTags::StatusBar_State_DamageResponse)
+	{
+		SetStatusBarState(ARPGGameplayTags::StatusBar_State_None);
+	}
 }
