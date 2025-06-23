@@ -36,11 +36,10 @@ void AWeaponItem::Init(const UItemBaseDataAsset* InData)
 {
 	Super::Init(InData);
 
-	UItemBaseDataAsset* nonConstItem = const_cast<UItemBaseDataAsset*>(InData);
-	UEquipBaseItemDataAsset* EquipData = Cast<UEquipBaseItemDataAsset>(nonConstItem);
-
-	//AActor* OwnerActor = GetOwner();
-
+	if (const UEquipBaseItemDataAsset* EquipData = Cast<UEquipBaseItemDataAsset>(InData))
+	{
+		ComboData = EquipData->WeaponData.ComboDataAsset;
+	}
 }
 
 void AWeaponItem::EquipMesh(const UItemBaseDataAsset* InData)
@@ -63,65 +62,33 @@ void AWeaponItem::EquipMesh(const UItemBaseDataAsset* InData)
 
 	if (EquipData && MeshComp)
 	{
-		FName WepaonStartSocketName = EquipData->WeaponData.WeaponSocketTraceName.TraceStartSocketName;
-		FName WepaonEndSocketName = EquipData->WeaponData.WeaponSocketTraceName.TraceEndSocketName;
+		const FVector TraceStartLoc = GetStaticMeshComponent()->GetSocketLocation(EquipData->WeaponData.WeaponSocketTraceName.TraceHeightStartSocketName);
+		const FVector TraceEndLoc = GetStaticMeshComponent()->GetSocketLocation(EquipData->WeaponData.WeaponSocketTraceName.TraceHeightEndSocketName);
 
-		FVector TraceStartLoc = GetStaticMeshComponent()->GetSocketTransform(WepaonStartSocketName, RTS_Component).GetLocation();
-		FVector TraceEndLoc = GetStaticMeshComponent()->GetSocketTransform(WepaonEndSocketName, RTS_Component).GetLocation();
+		const FVector TraceVector = TraceEndLoc - TraceStartLoc;
+		const float TraceLength = TraceVector.Size();
+		const FVector TraceDirection = TraceVector.GetSafeNormal();
 
-	
-		float BoxExtendY = (abs(TraceStartLoc.Y) - abs(TraceEndLoc.Y)) / 2;
-		float BoxCenterY = (TraceStartLoc.Y + TraceEndLoc.Y) / 2;
+		const FVector BoxCenter = (TraceStartLoc + TraceEndLoc) * 0.5f;
 
-		FVector LocalBoundsMin, LocalBoundsMax;
-		GetStaticMeshComponent()->GetLocalBounds(LocalBoundsMin, LocalBoundsMax);
+		WeaponCollisionComponent->SetWorldLocation(BoxCenter);
 
-		WeaponCollisionComponent->SetBoxExtent(FVector(LocalBoundsMax.X, BoxExtendY, LocalBoundsMax.Z));
-		WeaponCollisionComponent->SetRelativeLocation(FVector(0.f, BoxCenterY, 0.f));
-		WeaponCollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		// 박스 Extent 설정: 길이는 Trace 길이 / 2, 나머지는 임의값 또는 무기 크기 기반
+		FVector BoxExtent;
+		BoxExtent.X = TraceLength * 0.5f; // 길이
+		BoxExtent.Y = 2.f; // 폭
+		BoxExtent.Z = 2.f; // 높이
+		WeaponCollisionComponent->SetBoxExtent(BoxExtent);
+
+		// 박스 회전 설정 (Trace 방향에 맞게)
+		FRotator BoxRotation = TraceDirection.Rotation();
+		WeaponCollisionComponent->SetWorldRotation(BoxRotation);
 	}
 
 
 
 }
 
-void AWeaponItem::EquipAbility(const UItemBaseDataAsset* InData)
-{
-
-	const IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(GetOwner());
-	UAbilitySystemComponent* ASC = nullptr;
-
-	UItemBaseDataAsset* nonConstItem = const_cast<UItemBaseDataAsset*>(InData);
-	UEquipBaseItemDataAsset* EquipData = Cast<UEquipBaseItemDataAsset>(nonConstItem);
-	
-	if (!ASI)
-		return;
-	if (!EquipData)
-		return;
-
-	ASC = ASI->GetAbilitySystemComponent();
-	
-	ComboData = EquipData->WeaponData.ComboDataAsset;
-	if (ASC)
-	{
-		for (const auto& Ability : EquipData->WeaponData.Abilties)
-		{
-			if (ensure(Ability))
-			{
-				UARPGAbility* AbilityCDO = Ability->GetDefaultObject<UARPGAbility>();
-
-				FGameplayAbilitySpec AbilitySpec(AbilityCDO, 1,INDEX_NONE, Cast<UObject>(ComboData));
-				AbilitySpec.DynamicAbilityTags.AddTag(AbilityCDO->StartupInputTag);
-				ASC->GiveAbility(AbilitySpec);
-			}
-		}
-
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ASC nullptr "));
-	}
-}
 
 void AWeaponItem::UnEquipMesh(const UItemBaseDataAsset* InData)
 {
@@ -135,10 +102,6 @@ void AWeaponItem::UnEquipMesh(const UItemBaseDataAsset* InData)
 
 		MeshComp->LinkAnimClassLayers(EquipData->WeaponData.UnEquippedAnimSet);
 	}
-}
-
-void AWeaponItem::UnEquipAbility()
-{
 }
 
 void AWeaponItem::WeaponCollisionEnable(bool bEnable)
@@ -159,7 +122,6 @@ void AWeaponItem::SetTraceObjectType(ECollisionChannel CollisionChannel, ECollis
 	WeaponCollisionComponent->SetCollisionResponseToChannel(CollisionChannel, CollisionResponse);
 }
 
-//장착된 무기의 좌표계 때문에 HitResult의 ImpactPoint를 수정하기위해 . const_cast를 사용했습니다.
 void AWeaponItem::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (AlreadyHitActor.Contains(SweepResult.GetActor()))

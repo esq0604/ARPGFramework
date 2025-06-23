@@ -3,9 +3,14 @@
 
 #include "InventoryComponent.h"
 #include "ActionFramework/Datas/ItemBaseDataAsset.h"
+#include "ActionFramework/Datas/EquipBaseItemDataAsset.h"
 #include "ActionFramework/Interface/Equipable.h"
 #include "ActionFramework/Interface/Useable.h"
+#include "ActionFramework/ARPGGameplayTags.h"
 #include "ActionFramework/Items/WeaponItem.h"
+#include "GameplayAbilities/Public/AbilitySystemInterface.h"
+#include "AbilitySystemComponent.h"
+#include "ActionFramework/AbilitySystem/ARPGAbility.h"
 //#include "uLang/Common/Misc/Optional.h"
 
 
@@ -31,10 +36,10 @@ void UInventoryComponent::BeginPlay()
 		InventoryItemContainer.Add(ItemTag, TArray<TObjectPtr<UItemBaseDataAsset>>());
 		InventoryItemContainer[ItemTag].Init(nullptr, ItemContainerSize);
 
-		EquipmentItemContainer.Add(ItemTag, TArray<TObjectPtr<UItemBaseDataAsset>>());
-		EquipmentItemContainer[ItemTag].Init(nullptr,GetEquipmentItemCapaicty(ItemTag));
+		RegisteredItemContainer.Add(ItemTag, TArray<TObjectPtr<UItemBaseDataAsset>>());
+		RegisteredItemContainer[ItemTag].Init(nullptr,GetEquipmentItemCapaicty(ItemTag));
 
-		CurUsingTagEquipmentContainerIndexMap.Add({ ItemTag,0 });
+		ActiveRegisteredItemIndexMap.Add({ ItemTag,0 });
 	}
 	// 초기 아이템 추가
 	AddStartingItem();
@@ -45,12 +50,12 @@ void UInventoryComponent::BeginPlay()
 
 UItemBaseDataAsset* UInventoryComponent::GetCurrentEquipWeaponData()
 {
-	FGameplayTag WeaponTag = FGameplayTag::RequestGameplayTag("ItemType.Equipment.Weapon");
-	uint8* CurIndex = CurUsingTagEquipmentContainerIndexMap.Find(WeaponTag);
+	FGameplayTag WeaponTag = ARPGGameplayTags::ItemType_Equipment_Weapon;
+	uint8* CurIndex = ActiveRegisteredItemIndexMap.Find(WeaponTag);
 
-	if (EquipmentItemContainer[WeaponTag][*CurIndex] != nullptr)
+	if (RegisteredItemContainer[WeaponTag][*CurIndex] != nullptr)
 	{
-		return EquipmentItemContainer[WeaponTag][*CurIndex];
+		return RegisteredItemContainer[WeaponTag][*CurIndex];
 	}
 
 	return nullptr;
@@ -97,186 +102,222 @@ void UInventoryComponent::AddItemToItemContainer(const UItemBaseDataAsset* Added
 		}
 }
 
+void UInventoryComponent::SpawnEquipItemAndEquip(const UEquipBaseItemDataAsset* EquipDataAsset)
+{
+	if (!EquipDataAsset || !EquipDataAsset->ActorToSpawnClass) return;
+
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = OwnerPawn;
+
+	AEquipItem* SpawnedItem = GetWorld()->SpawnActor<AEquipItem>(
+		EquipDataAsset->ActorToSpawnClass,
+		OwnerPawn->GetActorTransform(),
+		SpawnParams
+	);
+
+	if (SpawnedItem)
+	{
+		SpawnedItem->Init(EquipDataAsset);
+		SpawnedItem->EquipMesh(EquipDataAsset);
+		EquippedItemActors.Add({ EquipDataAsset->ItemTypeTag, SpawnedItem });
+	}
+}
+
+void UInventoryComponent::GrantAbilitiesFromEquipItemData(const UEquipBaseItemDataAsset* EquipDataAsset)
+{
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(OwnerPawn);
+	UAbilitySystemComponent* ASC = ASI ? ASI->GetAbilitySystemComponent() : nullptr;
+	if (!ASC || !EquipDataAsset) return;
+
+	for (const auto& AbilityClass : EquipDataAsset->WeaponData.Abilties)
+	{
+		if (!AbilityClass.Ability) continue;
+
+		UARPGAbility* AbilityCDO = AbilityClass.Ability->GetDefaultObject<UARPGAbility>();
+		FGameplayAbilitySpec Spec(AbilityCDO, 1, INDEX_NONE,AbilityClass.SourceObject);
+		Spec.DynamicAbilityTags.AddTag(AbilityCDO->StartupInputTag);
+
+		FGameplayAbilitySpecHandle Handle = ASC->GiveAbility(Spec);
+		
+		FGrantedAbilityHandles& Handles = GrantedAbilityMap.FindOrAdd(const_cast<UEquipBaseItemDataAsset*>(EquipDataAsset));
+		Handles.Handles.Add(Handle);
+	}
+}
+
+void UInventoryComponent::RemoveAbilitiesFromEquipItemData(const UEquipBaseItemDataAsset* EquipDataAsset)
+{
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(OwnerPawn);
+	UAbilitySystemComponent* ASC = ASI ? ASI->GetAbilitySystemComponent() : nullptr;
+
+	
+	const FGrantedAbilityHandles& HantedAbilityHanddles = GrantedAbilityMap.FindAndRemoveChecked(EquipDataAsset);
+
+	for (const auto& Handle : HantedAbilityHanddles.Handles)
+	{
+		ASC->ClearAbility(Handle);
+	}
+}
+
+
+
 uint8 UInventoryComponent::GetEquipmentItemCapaicty(FGameplayTag ItemType)
 {
-	if (EquipmentItemContainerCapacity.Contains(ItemType))
+	if (RegisteredItemContainerCapacity.Contains(ItemType))
 	{
-		return EquipmentItemContainerCapacity[ItemType];
+		return RegisteredItemContainerCapacity[ItemType];
 	}
 
 	return INDEX_NONE;
 }
 
-void UInventoryComponent::ChangeNextWeapon(float ChangedIndex)
+AActor* UInventoryComponent::GetSpawnedEquippedActor(FGameplayTag ItemTypeTag) const
 {
-	FGameplayTag WeaponTag = FGameplayTag::RequestGameplayTag("ItemType.Equipment.Weapon");
-	uint8* WeaponCapacity = EquipmentItemContainerCapacity.Find(FGameplayTag::RequestGameplayTag("ItemType.Equipment.Weapon"));
-	uint8* CurIndex = CurUsingTagEquipmentContainerIndexMap.Find(WeaponTag);
-
-	const TArray<TObjectPtr<UItemBaseDataAsset>>* WeaponEquipContainer = EquipmentItemContainer.Find(WeaponTag);
-	if ((*WeaponEquipContainer)[*CurIndex] != nullptr)
+	if (const TObjectPtr<AEquipItem>* Found = EquippedItemActors.Find(ItemTypeTag))
 	{
-		IEquipable* EquipableItem = Cast<IEquipable>((*WeaponEquipContainer)[*CurIndex]);
-		if (EquipableItem)
-		{
-			EquipableItem->UnEquip();
-		}
+		return *Found;
 	}
-
-	(*CurIndex) += ChangedIndex;
-	if (*CurIndex >= *WeaponCapacity)
-	{
-		*CurIndex = 0;
-	}
-	else if (*CurIndex < 0)
-	{
-		*CurIndex = *WeaponCapacity;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Change Weapon Index %d"), *CurIndex);
-
-	if ((*WeaponEquipContainer)[*CurIndex] != nullptr)
-	{
-		IEquipable* EquipableItem = Cast<IEquipable>((*WeaponEquipContainer)[*CurIndex]);
-		if (EquipableItem)
-		{
-			EquipableItem->Equip();
-		}
-	}	
+		
+	return nullptr;
 }
 
-void UInventoryComponent::EquipItemFromInventoryItemContainer(FGameplayTag ItemTypeTag, uint8 RequsetItemIndex, uint8 UpdateSlotIndex)
+void UInventoryComponent::ChangeNextWeapon(float ChangedIndex)
 {
+	const FGameplayTag WeaponTag = ARPGGameplayTags::ItemType_Equipment_Weapon;
 
-	UE_LOG(LogTemp, Warning, TEXT("EquipItemFromInventoryItemContainer :: RequsetItemIndex %d , UpdateIndex %d"), RequsetItemIndex, UpdateSlotIndex);
+	uint8* CapacityPtr = RegisteredItemContainerCapacity.Find(WeaponTag);
+	uint8* CurIndexPtr = ActiveRegisteredItemIndexMap.Find(WeaponTag);
+	const TArray<TObjectPtr<UItemBaseDataAsset>>* ItemsPtr = RegisteredItemContainer.Find(WeaponTag);
+
+	if (!CapacityPtr || !CurIndexPtr || !ItemsPtr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : ChangeNextWeapon - Missing data "), *FString(__FILE__));
+	}
+
+	const uint8 Capcity = *CapacityPtr;
+	uint8& CurIndex = *CurIndexPtr;
+
+	if (AActor* EquippedActor = GetSpawnedEquippedActor(WeaponTag))
+	{
+		RemoveAbilitiesFromEquipItemData(Cast<UEquipBaseItemDataAsset>((*ItemsPtr)[CurIndex]));
+		EquippedActor->Destroy(); 
+		EquippedItemActors.Remove(WeaponTag);
+	}
+
+	CurIndex += ChangedIndex;
+	if (CurIndex >= Capcity)
+	{
+		CurIndex = 0;
+	}
+	else if (CurIndex < 0)
+	{
+		CurIndex = Capcity;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Change Weapon Index %d"), CurIndex);
+
+	// 새 아이템 가져오기
+	if (UEquipBaseItemDataAsset* EquipData = Cast<UEquipBaseItemDataAsset>((*ItemsPtr)[CurIndex]))
+	{
+		SpawnEquipItemAndEquip(EquipData); // 액터 스폰 및 메시 장착 등
+		GrantAbilitiesFromEquipItemData(EquipData);
+	}
+}
+
+void UInventoryComponent::RegisterItemFromInventoryToSlot(FGameplayTag ItemTypeTag, uint8 RequsetItemIndex, uint8 UpdateSlotIndex)
+{
 	if (TArray<TObjectPtr<UItemBaseDataAsset>>* Items = InventoryItemContainer.Find(ItemTypeTag))
 	{
 		if (Items->IsValidIndex(RequsetItemIndex))
 		{
 			UItemBaseDataAsset* SelectedItem = (*Items)[RequsetItemIndex];
-			IEquipable* EquipableItem = Cast<IEquipable>((*Items)[RequsetItemIndex]);
-			
-			if (EquipableItem)
+			UEquipBaseItemDataAsset* EquipData = Cast<UEquipBaseItemDataAsset>(SelectedItem);
+
+			//장착 및 UI 갱신
+			if (EquipData)
 			{
-				uint8* Index = CurUsingTagEquipmentContainerIndexMap.Find(ItemTypeTag);
-				if(UpdateSlotIndex == *Index)
+				//현재 사용중인 인덱스와 장착하는 인덱스가 같은 경우에는 스폰 및 어빌리티 부여를 합니다.
+				uint8* Index = ActiveRegisteredItemIndexMap.Find(ItemTypeTag);
+				if (UpdateSlotIndex == *Index)
 				{
-					if (EquipableItem->Equip())
-					{
-						EquipmentItemContainer[ItemTypeTag][UpdateSlotIndex] = SelectedItem;
-						OnEquipmentChange.Broadcast(ItemTypeTag,UpdateSlotIndex, SelectedItem);
-					}
+						RegisteredItemContainer[ItemTypeTag][UpdateSlotIndex] = SelectedItem;
+						OnEquipmentChange.Broadcast(ItemTypeTag, UpdateSlotIndex, SelectedItem);
+						SpawnEquipItemAndEquip(EquipData);
+						GrantAbilitiesFromEquipItemData(EquipData);
 				}
 				else
 				{
-
-					EquipmentItemContainer[ItemTypeTag][UpdateSlotIndex] = SelectedItem;
-					OnEquipmentChange.Broadcast(ItemTypeTag,UpdateSlotIndex, SelectedItem);
+					RegisteredItemContainer[ItemTypeTag][UpdateSlotIndex] = SelectedItem;
+					OnEquipmentChange.Broadcast(ItemTypeTag, UpdateSlotIndex, SelectedItem);
 				}
 			}
 		}
 	}
 }
-
-void UInventoryComponent::UnEquipItem(FGameplayTag ItemTypeTag, uint8 RequsetItemIndex, uint8 UpdateSlotIndex)
+void UInventoryComponent::UnRegisterItemFromSlot(FGameplayTag ItemTypeTag, uint8 RequsetItemIndex, uint8 UpdateSlotIndex)
 {
-	const TArray<TObjectPtr<UItemBaseDataAsset>>* Items = EquipmentItemContainer.Find(ItemTypeTag);
+	const TArray<TObjectPtr<UItemBaseDataAsset>>* Items = RegisteredItemContainer.Find(ItemTypeTag);
 	if(Items->IsValidIndex(RequsetItemIndex))
 	{
 		UItemBaseDataAsset* SelectedItem = (*Items)[RequsetItemIndex];
-		IEquipable* EquipableItem = Cast<IEquipable>((*Items)[RequsetItemIndex]);
-		uint8* Index = CurUsingTagEquipmentContainerIndexMap.Find(ItemTypeTag);
+		UEquipBaseItemDataAsset* EquipData = Cast<UEquipBaseItemDataAsset>(SelectedItem);
+		uint8* Index = ActiveRegisteredItemIndexMap.Find(ItemTypeTag);
 
 		if (UpdateSlotIndex == *Index)
 		{
-			if (EquipableItem->UnEquip())
+			if (EquipData)
 			{
-				EquipmentItemContainer[ItemTypeTag][UpdateSlotIndex] = nullptr;
+
+				RegisteredItemContainer[ItemTypeTag][UpdateSlotIndex] = nullptr;
 				OnEquipmentChange.Broadcast(ItemTypeTag,UpdateSlotIndex, nullptr);
 			}
 		}
 		else
 		{
-			EquipmentItemContainer[ItemTypeTag][UpdateSlotIndex] = nullptr;
+			RegisteredItemContainer[ItemTypeTag][UpdateSlotIndex] = nullptr;
 			OnEquipmentChange.Broadcast(ItemTypeTag, UpdateSlotIndex, nullptr);
+		}
+
+		UEquipBaseItemDataAsset* EquipDataAsset = Cast<UEquipBaseItemDataAsset>(SelectedItem);
+
+		if (EquipDataAsset)
+		{
+			APawn* OwnerPawn = Cast<APawn>(GetOwner());
+			IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(OwnerPawn);
+			if (ASI)
+			{
+				UAbilitySystemComponent* ASC = ASI->GetAbilitySystemComponent();
+				if (ASC)
+				{
+					FGrantedAbilityHandles* Handles = GrantedAbilityMap.Find(EquipDataAsset);
+					if (Handles)
+					{
+						for (const FGameplayAbilitySpecHandle& Handle : Handles->Handles)
+						{
+							ASC->ClearAbility(Handle);
+						}
+						GrantedAbilityMap.Remove(EquipDataAsset);
+					}
+				}
+			}
 		}
 	}
 }
 
 bool UInventoryComponent::IsEquippedItem(FGameplayTag ItemTypeTag, uint8 Index)
 {
-	if (TArray<TObjectPtr<UItemBaseDataAsset>>* Items = EquipmentItemContainer.Find(ItemTypeTag))
+	if (TArray<TObjectPtr<UItemBaseDataAsset>>* Items = InventoryItemContainer.Find(ItemTypeTag))
 	{
 		if (Items->IsValidIndex(Index))
 		{
-			if (UItemBaseDataAsset* SelectedItem = (*Items)[Index])
-			{
+			if (RegisteredItemContainer[ItemTypeTag].Contains((*Items)[Index]))
 				return true;
-			}	
 		}
 	}
 	return false;
 	
-}
-
-void UInventoryComponent::EquipUnEquipItemToEquipment(FGameplayTag ItemType, int32 ContainerIndex , int32 EquipIndex)
-{
-
-	//if (TArray<TObjectPtr<UItemBaseDataAsset>>* Items = ItemContainer.Find(ItemType))
-	//{
-	//	// 2. 유효한 ContainerIndex 확인
-	//	if (Items->IsValidIndex(ContainerIndex))
-	//	{
-	//		UItemBaseDataAsset* SelectedItem = (*Items)[ContainerIndex];
-	//		if (SelectedItem)
-	//		{
-	//			TArray<TObjectPtr<UItemBaseDataAsset>>* EquipItems = EquipmentItemContainer.Find(ItemType);
-	//			// 같은 아이템 클릭시 기존 장비 해제
-	//			if (EquipItems && EquipItems->IsValidIndex(EquipIndex))
-	//			{
-	//				UItemBaseDataAsset* CurrentlyEquippedItem = (*EquipItems)[EquipIndex];
-	//				if (CurrentlyEquippedItem && CurrentlyEquippedItem->Implements<UEquipable>()) 
-	//				{
-	//					UE_LOG(LogTemp, Warning, TEXT("UnEquip"));
-	//					IEquipable* EquipableItem = Cast<IEquipable>(CurrentlyEquippedItem);
-	//					EquipableItem->UnEquip();
-	//					(*EquipItems)[EquipIndex] = nullptr;
-
-	//					if (EquipmentWidget)
-	//					{
-	//						FSlotDisplayInfo SlotInfo;
-	//						SlotInfo.Icon = nullptr; // 또는 빈 아이콘 리소스 설정
-	//						SlotInfo.Name = FText::FromString(TEXT("")); // 빈 텍스트
-	//						SlotInfo.Count = 0; // 카운트는 0
-	//						//EquipmentWidget->UpdateEquipRequestSlot(SlotInfo);
-	//						return;
-	//					}
-	//				}
-	//			}
-
-	//			// 다른 아이템 클릭시 새 장비 장착
-	//			if (EquipItems) 
-	//			{
-	//				(*EquipItems)[EquipIndex] = SelectedItem;
-	//				if (SelectedItem->Implements<UEquipable>())
-	//				{
-	//					IEquipable* EquipableItem = Cast<IEquipable>(SelectedItem);
-	//					EquipableItem->Equip();
-	//				}
-	//				// 4. EquipmentWidget 업데이트
-	//				if (EquipmentWidget)
-	//				{
-	//					FSlotDisplayInfo SlotInfo;
-	//					SlotInfo.Icon = SelectedItem->AssetData.Icon;
-	//					SlotInfo.Name = SelectedItem->TextData.Name;
-	//					SlotInfo.Count = SelectedItem->NumericData.Quantity;
-
-	//					//EquipmentWidget->UpdateEquipRequestSlot(SlotInfo);
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
 }
 
 const TArray<TObjectPtr<UItemBaseDataAsset>>* UInventoryComponent::GetInventoryItems(FGameplayTag ItemType)
@@ -292,7 +333,7 @@ const TArray<TObjectPtr<UItemBaseDataAsset>>* UInventoryComponent::GetInventoryI
 
 const TArray<TObjectPtr<UItemBaseDataAsset>>* UInventoryComponent::GetEquipmentItems(FGameplayTag ItemType)
 {
-	if (const TArray<TObjectPtr<UItemBaseDataAsset>>* FoundPtr = EquipmentItemContainer.Find(ItemType))
+	if (const TArray<TObjectPtr<UItemBaseDataAsset>>* FoundPtr = RegisteredItemContainer.Find(ItemType))
 	{
 		return FoundPtr;
 	}
@@ -331,21 +372,21 @@ const UItemBaseDataAsset* UInventoryComponent::GetInventoryItem(FGameplayTag Ite
 	return FoundItem;
 }
 
-const UItemBaseDataAsset* UInventoryComponent::GetEquipmentItem(FGameplayTag ItemType, uint8 Index)
+const UItemBaseDataAsset* UInventoryComponent::GetRegistedItem(FGameplayTag ItemType, uint8 Index)
 {
 	// 1) ItemType에 해당하는 배열을 찾는다
-	const TArray<TObjectPtr<UItemBaseDataAsset>>* FoundArray = EquipmentItemContainer.Find(ItemType);
+	const TArray<TObjectPtr<UItemBaseDataAsset>>* FoundArray = RegisteredItemContainer.Find(ItemType);
 	if (!FoundArray)
 	{
 		// 로그를 남기고 nullptr 반환
-		UE_LOG(LogTemp, Warning, TEXT("GetEquipmentItem: No container found for ItemType [%s]"), *ItemType.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("GetRegistedItem: No container found for ItemType [%s]"), *ItemType.ToString());
 		return nullptr;
 	}
 
 	// 2) 인덱스 범위가 유효한지 확인
 	if (!FoundArray->IsValidIndex(Index))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("GetEquipmentItem: Index [%d] is out of range for ItemType [%s]. Size=[%d]"),
+		UE_LOG(LogTemp, Warning, TEXT("GetRegistedItem: Index [%d] is out of range for ItemType [%s]. Size=[%d]"),
 			Index, *ItemType.ToString(), FoundArray->Num());
 		return nullptr;
 	}
@@ -354,7 +395,7 @@ const UItemBaseDataAsset* UInventoryComponent::GetEquipmentItem(FGameplayTag Ite
 	const UItemBaseDataAsset* FoundItem = (*FoundArray)[Index];
 	if (!FoundItem)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("GetEquipmentItem: Found a null pointer at Index [%d] in container for ItemType [%s]"),
+		UE_LOG(LogTemp, Warning, TEXT("GetRegistedItem: Found a null pointer at Index [%d] in container for ItemType [%s]"),
 			Index, *ItemType.ToString());
 		return nullptr;
 	}
@@ -365,7 +406,7 @@ const UItemBaseDataAsset* UInventoryComponent::GetEquipmentItem(FGameplayTag Ite
 
 bool UInventoryComponent::IsItemEquipped(UItemBaseDataAsset* Item)
 {
-	TArray<TObjectPtr<UItemBaseDataAsset>>* Items = EquipmentItemContainer.Find(Item->ItemTypeTag);
+	TArray<TObjectPtr<UItemBaseDataAsset>>* Items = RegisteredItemContainer.Find(Item->ItemTypeTag);
 
 	if (Items->Contains(Item))
 	{

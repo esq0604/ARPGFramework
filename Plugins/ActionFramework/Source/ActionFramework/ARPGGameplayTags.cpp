@@ -18,12 +18,15 @@ namespace ARPGGameplayTags
 {
 	//Ability
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_Attack, "Abilities.Attack", "Attack Ability Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_Execute, "Abilities.Execute", "Execute Ability Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_Executed, "Abilities.Executed", "Executed Ability Tag");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_HitReact, "Abilities.HitReact", "HitReact Ability Tag");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_Parry, "Abilities.HitReact", "Parry Ability Tag");
 
 	//Effect
 	
 	//Status
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Crouch, "Status.Crouch", "Target has the Crouch status.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Death, "Status.Death", "Target has the death status.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Parry, "Status.Parry", "Target has the block state");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Block, "Status.Block", "Target has the parry state");
@@ -36,6 +39,9 @@ namespace ARPGGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Block, "GameplayEvent.Block", "Block Event For ActivateAbility");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Parry, "GameplayEvent.Parry", "Parry Event For ActivateAbility");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_HitReact, "GameplayEvent.HitReact", "HitReact For ActivateAbility");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Executed, "GameplayEvent.Executed", "Executed Event For WaitGameplayEvent");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Execution, "GameplayEvent.Execution", "Execution EventFor WaitGameplayEvent");
+
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_OpenInventory, "ItemType.Equipment.Weapon", "Item type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_OpenEquipment, "ItemType.Equipment.Weapon", "Item type tag ");
@@ -59,9 +65,11 @@ namespace ARPGGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_RightClick, "Input.LightClick", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_LeftClick, "Input.RightClick", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Move, "Input.Move", "Input type tag ");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Crouch, "Input.Crouch", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Look, "Input.Look", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Esc, "Input.Esc", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Tab, "Input.Tab", "Input type tag ");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_MouseWheelMove, "Input.MouseWheelMove", "Input type tag ");
 
 
 	//GameplayCue

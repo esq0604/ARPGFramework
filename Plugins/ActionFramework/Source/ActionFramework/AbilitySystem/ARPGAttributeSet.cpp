@@ -5,12 +5,14 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "ActionFramework/ARPGGameplayTags.h"
 #include "ActionFramework/AbilitySystem/ARPGGameplayEffectContext.h"
+#include "ActionFramework/Datas/ExecutionDataAsset.h"
 #include "GameFramework/Character.h"
 #include "GameplayEffectExtension.h"
 
 
 UARPGAttributeSet::UARPGAttributeSet()
 {
+
 }
 
 void UARPGAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -72,16 +74,20 @@ void UARPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	
 	FEffectProperties Properties;
 	SetEffectProperties(Data, Properties);
-	if (Properties.TargetCharacter && Properties.SourceCharacter)
-	{
-		FGameplayEventData Payload;
-		Payload.Instigator = Properties.SourceCharacter;
-		Payload.Target = Properties.TargetCharacter;
-		Payload.ContextHandle = Properties.EffectContextHandle;
 
-		//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, TEXT("Handle GameplayEvent Hit React"));
-		Properties.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_HitReact, &Payload);
+	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+	{
+		if (Properties.TargetCharacter && Properties.SourceCharacter)
+		{
+			HandleHitReact(Properties);
+			if (GetHealth() <= 0.f)
+			{
+				TryTrrigerExecute(Properties);
+			}
+		}
 	}
+
+
 }
 
 void UARPGAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
@@ -119,7 +125,6 @@ void UARPGAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData
 		if (Props.SourceController)
 		{
 			Props.SourceCharacter = Cast<ACharacter>(Props.SourceController->GetPawn());
-			//SourceController->GetControlled
 		}
 	}
 
@@ -132,3 +137,60 @@ void UARPGAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData
 	}
 }
 
+void UARPGAttributeSet::HandleHitReact(const FEffectProperties& Props)
+{
+	FGameplayEventData Payload;
+	Payload.Instigator = Props.SourceCharacter;
+	Payload.Target = Props.TargetCharacter;
+	Payload.ContextHandle = Props.EffectContextHandle;
+
+	//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, TEXT("Handle GameplayEvent Hit React"));
+	Props.TargetASC->HandleGameplayEvent(ARPGGameplayTags::GameplayEvent_HitReact, &Payload);
+}
+
+void UARPGAttributeSet::TryTrrigerExecute(const FEffectProperties& Props)
+{
+	const FARPGGameplayEffectContext* ARPGContext = static_cast<const FARPGGameplayEffectContext*>(Props.EffectContextHandle.Get());
+	if (!ARPGContext) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("%s , TryExecute GetName : %s"), *FString(__FILE__), *Props.TargetCharacter->GetName());
+
+	const int32 ComboIndex = ARPGContext->ComboIndex;
+	const int32 HitReactIndex = ARPGContext->HitReactIndex;
+
+	//공격자 처형 어빌리티 수행,//피격자 처형 어빌리티 수행
+	if (const UComboDataAsset* ComboDataAsset = Cast<UComboDataAsset>(ARPGContext->GetSourceObject()))
+	{
+		if (!ComboDataAsset->ComboInfos.IsValidIndex(ComboIndex))
+		{
+			return;
+		}
+
+		if (!ComboDataAsset->ComboInfos[ComboIndex].bUseExecuteEvent) return;
+
+		FGameplayEventData ExecutionEvent;
+		ExecutionEvent.EventTag = ARPGGameplayTags::GameplayEvent_Execution;
+		ExecutionEvent.Instigator = Props.TargetCharacter;  // 피해자 → 이벤트 발생
+		ExecutionEvent.Target = Props.SourceCharacter;      // 공격자 → 실행 주체
+		ExecutionEvent.ContextHandle = Props.EffectContextHandle;
+		ExecutionEvent.OptionalObject = Cast<const UObject>(ComboDataAsset->ComboInfos[ComboIndex].ExecutionData.Get());
+
+		UE_LOG(LogTemp, Warning, TEXT("ExecutionEvent SourceCharacter : %s"), *Props.SourceCharacter->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("ExecutionEvent TargetCharacter : %s"), *Props.TargetCharacter->GetName());
+
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+			Props.SourceCharacter,
+			ARPGGameplayTags::GameplayEvent_Execution,
+			ExecutionEvent
+		);
+
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+			Props.TargetCharacter,
+			ARPGGameplayTags::GameplayEvent_Executed,
+			ExecutionEvent
+		);
+		
+	}
+
+
+}

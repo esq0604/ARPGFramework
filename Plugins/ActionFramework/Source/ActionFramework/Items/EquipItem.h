@@ -21,10 +21,8 @@ public:
 	virtual void Init(const UItemBaseDataAsset* InData);
 
 	virtual void EquipMesh(const UItemBaseDataAsset* InData);
-	virtual void EquipAbility(const UItemBaseDataAsset* InData);
 
 	virtual void UnEquipMesh(const UItemBaseDataAsset* InData);
-	virtual void UnEquipAbility();
 	
 private:
 	UPROPERTY(EditDefaultsOnly,Category="EquipItem")

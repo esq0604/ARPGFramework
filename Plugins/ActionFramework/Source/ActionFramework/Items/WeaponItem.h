@@ -30,11 +30,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void EquipMesh(const UItemBaseDataAsset* InData) override;
-	virtual void EquipAbility(const UItemBaseDataAsset* InData) override;
 		
 	UFUNCTION(BlueprintCallable)
 	virtual void UnEquipMesh(const UItemBaseDataAsset* InData) override;
-	virtual void UnEquipAbility() override;
 
 	UFUNCTION(BlueprintCallable)
 	void WeaponCollisionEnable(bool bEnable);

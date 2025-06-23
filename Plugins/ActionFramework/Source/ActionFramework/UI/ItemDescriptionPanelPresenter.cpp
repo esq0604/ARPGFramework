@@ -65,7 +65,7 @@ void UItemDescriptionPanelPresenter::UpdateEquipmentItemInfoPanel(const FEquipme
 	{
 		if (UInventoryComponent* InventoryComp = Cast<UInventoryComponent>(GetOptionalActorComponent()))
 		{
-			const UItemBaseDataAsset* Item = InventoryComp->GetEquipmentItem(Msg.ItemTypeTag, Msg.SlotIndex);
+			const UItemBaseDataAsset* Item = InventoryComp->GetRegistedItem(Msg.ItemTypeTag, Msg.SlotIndex);
 			FDescriptionInfo Info;
 
 			if (Item)

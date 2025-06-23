@@ -13,6 +13,7 @@
 #include "ActionFramework/UI/ARPGHUD.h"
 #include "ActionFramework/Player/ARPGPlayerState.h"
 #include "ActionFramework/Player/ARPGPlayerController.h"
+#include "ActionFramework/ARPGGameplayTags.h"
 #include "ActionFramework/AbilitySystem/ARPGAbilitySystemComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
@@ -46,7 +47,9 @@ AARPGCharacter::AARPGCharacter()
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
-
+	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
+	GetCharacterMovement()->bCanWalkOffLedgesWhenCrouching = true;
+	GetCharacterMovement()->SetCrouchedHalfHeight(65.0f);
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	TargetingCameraSpringArm = CreateDefaultSubobject<UARPGSpringArmComponent>(TEXT("ARPGSpringArm"));
 	
@@ -60,12 +63,13 @@ AARPGCharacter::AARPGCharacter()
 	FollowCamera->SetupAttachment(TargetingCameraSpringArm, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 	HitReactionComponent = CreateDefaultSubobject<UHitReactionComponent>(TEXT("HitReactionComponent"));
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryCoponent"));
-	//InventoryComponent->Out
 	BaseEyeHeight = 74.0f;
 
 }
@@ -87,6 +91,16 @@ void AARPGCharacter::BeginPlay()
 		AARPGHUD* HUD = Cast<AARPGHUD>(PC->GetHUD());
 
 		HUD->InitEquipmentWidget(PC, GetPlayerState(), AbilitySystemComponent, AttributeSet, InventoryComponent);
+	}
+
+	// 초기 무장 상태를 UnArm Layer로 설정
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		if (MeshComp->GetAnimInstance())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Apply Default UnarmAnimLayer"));
+			MeshComp->LinkAnimClassLayers(DefaultUnarmAnimLayerClass);
+		}
 	}
 }
 
@@ -155,6 +169,42 @@ void AARPGCharacter::Tick(float DeltaSeconds)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SrpingArm nullptr"));
 	}
+
+	if (!GetMesh())
+		return;
+	if (!GetMesh()->GetAnimInstance())
+		return;
+
+	// 1. Head의 현재 위치
+	FVector HeadSocketLoc = GetMesh()->GetSocketLocation("head");
+
+	// 2. 기준 회전값 (캐릭터의 몸 방향)
+	FRotator ActorRot = GetActorRotation();
+
+	// 3. 현재 컨트롤러 회전 (마우스 방향)
+	FRotator ControlRot = GetControlRotation();
+
+	// 4. DeltaYaw 계산 (컨트롤러와 몸의 회전 차이)
+	float RawYaw = ControlRot.Yaw;
+	float ActorYaw = ActorRot.Yaw;
+	float DeltaYaw = FMath::FindDeltaAngleDegrees(ActorYaw, RawYaw); // ? 핵심 수정
+
+	// 5. Yaw 클램프
+	float ClampedYaw = FMath::Clamp(DeltaYaw, -70.0f, 100.0f);
+
+	// 6. 클램프된 회전을 기준으로 새 회전값 만들기
+	FRotator ClampedRot = ActorRot;
+	ClampedRot.Yaw += ClampedYaw;
+
+	// 7. 방향 벡터와 LookAt 위치 계산
+	FVector LookAtLoc = HeadSocketLoc + ClampedRot.Vector() * 200.f;
+
+	// 9. 애님 인스턴스 전달
+	if (UARPGAnimInstance* AnimInstance = Cast<UARPGAnimInstance>(GetMesh()->GetAnimInstance()))
+	{
+		AnimInstance->LookAtLocation = LookAtLoc;
+	}
+
 }
 
 void AARPGCharacter::InitAbilityActorInfo()
@@ -195,18 +245,33 @@ void AARPGCharacter::InitDefaultAttribute()
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
 }
 
+void AARPGCharacter::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnStartCrouch"));
+	if (UARPGAbilitySystemComponent* ASC = GetARPGAbilitySystemComponent())
+	{
+		ASC->SetLooseGameplayTagCount(ARPGGameplayTags::Status_Crouch, 1);
+	}
+
+
+	Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+}
+
+void AARPGCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("OnEndCrouch"));
+	if (UARPGAbilitySystemComponent* ASC = GetARPGAbilitySystemComponent())
+	{
+		ASC->SetLooseGameplayTagCount(ARPGGameplayTags::Status_Crouch, 0);
+	}
+
+	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+}
+
 AActor* AARPGCharacter::GetEquippedWeapon_Implementation()
 {
-	UItemBaseDataAsset* Data = InventoryComponent->GetCurrentEquipWeaponData();
-	if (Data)
-	{
-		AActor* Item = Data->GetSpawnedActor();
-		if (Item)
-		{
-			return Item;
-		}
-	}
-	return nullptr;
+	return InventoryComponent->GetSpawnedEquippedActor(ARPGGameplayTags::ItemType_Equipment_Weapon);
 }
 
 UAbilitySystemComponent* AARPGCharacter::GetAbilitySystemComponent() const
@@ -222,6 +287,36 @@ UAbilitySystemComponent* AARPGCharacter::GetAbilitySystemComponent() const
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Player ASC nullptr"));
 	return nullptr;
+}
+
+UARPGAbilitySystemComponent* AARPGCharacter::GetARPGAbilitySystemComponent() const
+{
+	return Cast<UARPGAbilitySystemComponent>(GetAbilitySystemComponent());
+}
+
+void AARPGCharacter::ToggleCrouch()
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (GetCharacterMovement()->CanCrouchInCurrentState())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CanCrouch: TRUE"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CanCrouch: FALSE"));
+	}
+
+	if (MoveComp->bWantsToCrouch || bIsCrouched)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UnCrouch"));
+		UnCrouch();
+	}
+	else if (MoveComp->IsMovingOnGround())
+	{
+		//bIsCrouched = true;
+		UE_LOG(LogTemp, Warning, TEXT("Crouch"));
+		Crouch();
+	}
 }
 
 void AARPGCharacter::AddCharacterAbilities()

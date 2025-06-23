@@ -31,13 +31,9 @@ void UARPGMeleeAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle H
 
     if (CommitAbility(Handle, ActorInfo, ActivationInfo))
     {
-        GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("ActivateAbility"));
         CurrentActivateComboIndex = CurrentTryActivateComboIndex;
-
+        
         Attack(CurrentTryActivateComboIndex);
-
-       // GetSourceObject()->
-
     }
 
         
@@ -46,7 +42,6 @@ void UARPGMeleeAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle H
 void UARPGMeleeAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-    UE_LOG(LogTemp, Warning, TEXT("EndAbility Ability"));
 
     if (!bWasCancelled)
     {
@@ -58,7 +53,6 @@ void UARPGMeleeAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handle
 
 void UARPGMeleeAttackAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
-    UE_LOG(LogTemp, Warning, TEXT("Cancel Ability"));
     Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
@@ -110,7 +104,8 @@ void UARPGMeleeAttackAbility::Attack(uint8 ComboIndex)
 void UARPGMeleeAttackAbility::AttackHitEvent(FGameplayEventData Payload)
 {
 
-     if (const UComboDataAsset* ComboDataAsset = CastChecked<UComboDataAsset>(Payload.ContextHandle.GetSourceObject()))
+    //GetSourceObject
+     if (const UComboDataAsset* ComboDataAsset = CastChecked<UComboDataAsset>(GetSourceObject(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo())))
      {
          if (!ComboDataAsset->ComboInfos.IsValidIndex(CurrentActivateComboIndex))
          {
@@ -120,16 +115,6 @@ void UARPGMeleeAttackAbility::AttackHitEvent(FGameplayEventData Payload)
 
              return;
          }
-         if (!ComboDataAsset->ComboInfos[CurrentActivateComboIndex].HitReactionInfos.IsValidIndex(CurrentHitReactionIdex))
-         {
-             FString ComboIndexDebugText = FString::Printf(TEXT("HitReactionInfo is not vaild  : %d"), CurrentHitReactionIdex);
-
-             GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, ComboIndexDebugText);
-
-             //FString HitReactIndexDebugText = FString::Printf(TEXT("AttackAbility is not vaild HitReactIndex : %d"), CurrentHitReactionIdex);
-             //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, HitReactIndexDebugText);
-             return;
-         }
 
          FString ComboIndexDebugText = FString::Printf(TEXT("CurrentActivateComboIndex Index: %d"), CurrentActivateComboIndex);
          GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, ComboIndexDebugText);
@@ -137,9 +122,8 @@ void UARPGMeleeAttackAbility::AttackHitEvent(FGameplayEventData Payload)
          FString HitReactIndexDebugText = FString::Printf(TEXT("HitReactionInfo Index : %d"), CurrentHitReactionIdex);
          GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, HitReactIndexDebugText);
 
-         FHitReactionInfo CurHitReaction = ComboDataAsset->ComboInfos[CurrentActivateComboIndex].HitReactionInfos[CurrentHitReactionIdex];
-         TSubclassOf<UGameplayEffect> DamageClass = CurHitReaction.DamageEffect;
-         FGameplayTag Direction = CurHitReaction.AttackDirection;
+         TSubclassOf<UGameplayEffect> DamageClass = ComboDataAsset->ComboInfos[CurrentActivateComboIndex].DamageEffect;
+         FGameplayTag Direction = ComboDataAsset->ComboInfos[CurrentActivateComboIndex].AttackDirection;
          UAbilitySystemComponent* TargetASC = GetAttackHitTargetASC(Payload.Target);
 
          //Combo Index를 넘겨주기위해 Custom EffectContext를 제작하빈다.

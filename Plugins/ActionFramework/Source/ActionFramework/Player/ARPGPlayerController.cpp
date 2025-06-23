@@ -2,22 +2,23 @@
 
 
 #include "ARPGPlayerController.h"
+#include "Blueprint/UserWidget.h"
 #include "GameFramework/Character.h"
-#include "ActionFramework/Player/ARPGPlayerState.h"
 #include "GameplayAbilities/Public/AbilitySystemInterface.h"
-#include "ActionFramework/AbilitySystem/ARPGAbilitySystemComponent.h"
-#include "ActionFramework/Inventory/InventoryComponent.h"
+#include "GameFramework/PlayerState.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "Blueprint/UserWidget.h"
-#include "ActionFramework/UI/ARPGHUD.h"
-#include "ActionFramework/Camerra/ARPGSpringArmComponent.h"
-#include "GameFramework/PlayerState.h"
+#include "Kismet/KismetSystemLibrary.h"
+
+#include "ActionFramework/Player/ARPGPlayerState.h"
+#include "ActionFramework/Player/ARPGCharacter.h"
+#include "ActionFramework/AbilitySystem/ARPGAbilitySystemComponent.h"
+#include "ActionFramework/Inventory/InventoryComponent.h"
 #include "ActionFramework/ARPGGameplayTags.h"
-//#include "ActionFramework/Inventory/InventoryComponent.h"
 #include "ActionFramework/Input/ARPGInputComponent.h"
 #include "ActionFramework/ActionFramework.h"
-#include "Kismet/KismetSystemLibrary.h"
+#include "ActionFramework/UI/ARPGHUD.h"
+#include "ActionFramework/Camerra/ARPGSpringArmComponent.h"
 
 
 
@@ -75,9 +76,11 @@ void AARPGPlayerController::SetupInputComponent()
 
 	InputComp->BindAbilityActions(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Move, ETriggerEvent::Triggered, this, &ThisClass::Move,false);
+	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Crouch, ETriggerEvent::Started, this, &ThisClass::Crouch, false);
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Look, ETriggerEvent::Triggered, this, &ThisClass::Look, false);
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Esc, ETriggerEvent::Started, this, &ThisClass::ToggleEscWidget, false);
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Tab, ETriggerEvent::Started, this, &ThisClass::TargetLock, false);
+	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_MouseWheelMove, ETriggerEvent::Started, this, &ThisClass::ChangeNextWeapon, false);
 }
 
 void AARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
@@ -120,6 +123,14 @@ void AARPGPlayerController::Move(const FInputActionValue& Value)
 	GetCharacter()->AddMovementInput(ForwardDirection, MovementVector.Y);
 	GetCharacter()->AddMovementInput(RightDirection, MovementVector.X);
 	
+}
+
+void AARPGPlayerController::Crouch(const FInputActionValue& Value)
+{
+	if (AARPGCharacter* PlayerCharacter = GetPawn<AARPGCharacter>())
+	{
+		PlayerCharacter->ToggleCrouch();
+	}
 }
 
 void AARPGPlayerController::Look(const FInputActionValue& Value)

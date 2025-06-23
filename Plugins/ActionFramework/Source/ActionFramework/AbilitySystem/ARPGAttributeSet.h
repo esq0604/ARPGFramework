@@ -65,6 +65,9 @@ private:
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const;
+
+	void HandleHitReact(const FEffectProperties& Props);
+	void TryTrrigerExecute(const FEffectProperties& Props);
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Health")
 	FGameplayAttributeData Health;

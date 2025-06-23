@@ -98,10 +98,10 @@ void UItemListPaenlPresenter::EquipUnEquipItem(FGameplayTag ItemType, uint8 Inve
 	UInventoryComponent* InventoryComp = Cast<UInventoryComponent>(GetOptionalActorComponent());
 	if (!InventoryComp->IsEquippedItem(ItemType, InventoryListClickedSlotIndex))
 	{
-		InventoryComp->EquipItemFromInventoryItemContainer(ItemType, InventoryListClickedSlotIndex, CurClickedCatogoryIndex);
+		InventoryComp->RegisterItemFromInventoryToSlot(ItemType, InventoryListClickedSlotIndex, CurClickedCatogoryIndex);
 	}
 	else
 	{
-		InventoryComp->UnEquipItem(ItemType, InventoryListClickedSlotIndex, CurClickedCatogoryIndex);
+		InventoryComp->UnRegisterItemFromSlot(ItemType, InventoryListClickedSlotIndex, CurClickedCatogoryIndex);
 	}
 }

@@ -4,3 +4,13 @@
 #include "ActionFramework/Interface/Equipable.h"
 
 // Add default functionality here for any IEquipable functions that are not pure virtual.
+
+bool IEquipable::Equip()
+{
+    return false;
+}
+
+bool IEquipable::UnEquip()
+{
+    return false;
+}

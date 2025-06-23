@@ -2,7 +2,7 @@
 
 
 #include "ARPGEnemy.h"
-#include "AbilitySystemComponent.h"
+#include "ActionFramework/AbilitySystem/ARPGAbilitySystemComponent.h"
 #include "ActionFramework/Items/WeaponItem.h"
 #include "ActionFramework/Components/HitReactionComponent.h"
 #include "ActionFramework/Animation/ARPGAnimInstance.h"
@@ -24,7 +24,7 @@ AARPGEnemy::AARPGEnemy()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	ASC = CreateDefaultSubobject<UARPGAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	HitReactionComponent = CreateDefaultSubobject<UHitReactionComponent>(TEXT("HitReactionComponent"));
 	TargetWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("TargetWidgetComponent"));
 	TargetWidgetComponent->SetupAttachment(RootComponent);
@@ -46,6 +46,7 @@ void AARPGEnemy::PossessedBy(AController* NewController)
 	{
 		const UARPGAttributeSet* Attribute = ASC->GetSet<UARPGAttributeSet>();
 		ASC->InitAbilityActorInfo(this, this);
+		AddCharacterAbilities();
 		InitDefaultAttribute();
 	}
 
@@ -58,8 +59,9 @@ void AARPGEnemy::PossessedBy(AController* NewController)
 		{
 			BBComp->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
 			ARPGAIController->RunBehaviorTree(BehaviorTree);
+			ARPGAIController->GetBlackboardComponent()->SetValueAsObject(FName("SelfActor"), this);
 			ARPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), false);
-			
+			ARPGAIController->GetBlackboardComponent()->SetValueAsObject(FName("PatternDataTable"), PatternDataTable);
 		}
 	}
 }
@@ -172,6 +174,13 @@ void AARPGEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewTag
 	bHitReacting = NewTagCount > 0;
 
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed;
+}
+
+void AARPGEnemy::AddCharacterAbilities()
+{
+	UARPGAbilitySystemComponent* ARPGASC = CastChecked<UARPGAbilitySystemComponent>(ASC);
+	ARPGASC->AddCharacterAbilities(StartAbilities);
+
 }
 
 void AARPGEnemy::InitDefaultAttribute()

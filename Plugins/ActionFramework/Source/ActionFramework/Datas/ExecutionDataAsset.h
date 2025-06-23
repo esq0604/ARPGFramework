@@ -24,8 +24,5 @@ public:
 	TObjectPtr<UAnimMontage> ExecutedAnim;
 
 	UPROPERTY(EditAnywhere, Category = "ExecutionInfo")
-	float ExecutionWarpingDistance;
-
-	UPROPERTY(EditAnywhere, Category = "ExecutionInfo")
 	float ExecutedWarpingDistance;
 };

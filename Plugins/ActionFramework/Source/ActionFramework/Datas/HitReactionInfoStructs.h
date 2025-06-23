@@ -13,7 +13,23 @@
 class UGameplayEffect;
 class UExecutionDataAsset;
 
+USTRUCT(BlueprintType)
+struct FExecutionInfo
+{
+    GENERATED_BODY()
 
+    UPROPERTY(EditAnywhere, Category = "ExecutionInfo")
+    TObjectPtr<UAnimMontage> ExecutionAnim;
+
+    UPROPERTY(EditAnywhere, Category = "ExecutionInfo")
+    TObjectPtr<UAnimMontage> ExecutedAnim;
+
+    UPROPERTY(EditAnywhere, Category = "ExecutionInfo")
+    float ExecutionWarpingDistance;
+
+    UPROPERTY(EditAnywhere, Category = "ExecutionInfo")
+    float ExecutedWarpingDistance;
+};
 
 USTRUCT(BlueprintType)
 struct FHitReactionInfo
@@ -39,7 +55,7 @@ struct FHitReactionInfo
     float CameraShake;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitReaction", meta = (EditCondition = "UseFinishEvent"))
-    TObjectPtr<UExecutionDataAsset> ExecutionInfo;
+    FExecutionInfo ExecutionInfo;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitReaction")
     bool UseFinishEvent;

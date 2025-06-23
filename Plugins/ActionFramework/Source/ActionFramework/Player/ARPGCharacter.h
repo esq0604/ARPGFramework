@@ -20,6 +20,7 @@ class UInputAction;
 class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayAbility;
+class UARPGAbilitySystemComponent;
 class UGameplayEffect;
 
 UCLASS()
@@ -31,10 +32,6 @@ public:
 	AARPGCharacter();
 
 	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
-
-protected:
-
-
 protected:
 	virtual void BeginPlay();
 
@@ -47,6 +44,9 @@ protected:
 private:
 	void InitAbilityActorInfo();
 	void InitDefaultAttribute();
+
+	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class UARPGSpringArmComponent* GetSpringArmComp() const { return TargetingCameraSpringArm; }
@@ -55,6 +55,8 @@ public:
 
 	virtual AActor* GetEquippedWeapon_Implementation() override;
 	UAbilitySystemComponent* GetAbilitySystemComponent() const;
+	UARPGAbilitySystemComponent* GetARPGAbilitySystemComponent() const;
+	void ToggleCrouch();
 private:
 	void AddCharacterAbilities();
 
@@ -62,10 +64,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "ARPGCharacter")
 	TObjectPtr<UARPGSpringArmComponent> TargetingCameraSpringArm;
 
-
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "ARPGCharacter")
 	TObjectPtr<UCameraComponent> FollowCamera;
 private:
+	UPROPERTY(EditDefaultsOnly, Category = "ARPGCharacter")
+	TSubclassOf<UAnimInstance> DefaultUnarmAnimLayerClass;
+
 	UPROPERTY(EditDefaultsOnly, Category = "ARPGCharacter")
 	TObjectPtr<UHitReactionComponent> HitReactionComponent;
 

@@ -68,6 +68,7 @@ private:
 	UFUNCTION()
 	void HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewTagCount);
 
+	void AddCharacterAbilities();
 public:
 	UPROPERTY()
 	FOnAttributeChangedSignature OnHealthChanged;
@@ -111,8 +112,19 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	TSubclassOf<UGameplayEffect> DefaultAttributeEffect;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TArray<TSubclassOf<UGameplayAbility>> StartAbilities;
+
+
 	UPROPERTY()
 	TObjectPtr<AActor> CombatTarget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	TObjectPtr<UDataTable> PatternDataTable;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FGameplayTag EnemyTag;
+
 
 	UPROPERTY()
 	bool bHitReacting;

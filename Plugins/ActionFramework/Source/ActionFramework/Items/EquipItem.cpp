@@ -32,15 +32,6 @@ void AEquipItem::EquipMesh(const UItemBaseDataAsset* InData)
 	}
 }
 
-void AEquipItem::EquipAbility(const UItemBaseDataAsset* InData)
-{
-
-}
-
 void AEquipItem::UnEquipMesh(const UItemBaseDataAsset* InData)
-{
-}
-
-void AEquipItem::UnEquipAbility()
 {
 }

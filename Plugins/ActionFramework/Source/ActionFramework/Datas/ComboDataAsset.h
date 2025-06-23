@@ -26,7 +26,23 @@ struct FComboInfo
 	TObjectPtr<UAnimMontage> DeflectedMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitReaction")
-	TArray<FHitReactionInfo> HitReactionInfos;
+	FGameplayTag AttackDirection;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitReaction")
+	FGameplayTag AttackType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitReaction")
+	TSubclassOf<UGameplayEffect> DamageEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitReaction")
+	float HitStop;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitReaction")
+	float Intensity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitReaction")
+	float CameraShake;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX")
 	TObjectPtr<UNiagaraSystem> EnemyHitVFX;
@@ -36,6 +52,12 @@ struct FComboInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX")
 	TObjectPtr<UNiagaraSystem> WeaponHitVFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Execution", meta = (EditCondition = "bUseExecuteEvent"))
+	TObjectPtr<UExecutionDataAsset> ExecutionData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Execution")
+	bool bUseExecuteEvent = false;
 };
 
 

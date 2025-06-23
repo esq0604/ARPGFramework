@@ -13,6 +13,17 @@
 /**
  * 
  */
+USTRUCT()
+struct FAbilityGrantEntry
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UGameplayAbility> Ability;
+
+	UPROPERTY(EditAnywhere)
+	UObject* SourceObject = nullptr; // ComboData or null
+};
 
 USTRUCT()
 struct FWeaponData
@@ -20,7 +31,7 @@ struct FWeaponData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "EquipData")
-	TArray<TSubclassOf<UARPGAbility>> Abilties;
+	TArray<FAbilityGrantEntry> Abilties;
 
 	UPROPERTY(EditAnywhere,Category = "EquipData")
 	TArray<TSubclassOf<UGameplayEffect>> Effects;
@@ -56,16 +67,9 @@ struct FArmorData
 
 //ItemData에서 Equip, Use는 아이템을 EquipWidget에 장착 및 사용을 의미합니다.
 UCLASS()
-class ACTIONFRAMEWORK_API UEquipBaseItemDataAsset : public UItemBaseDataAsset , public IEquipable , public IUseable
+class ACTIONFRAMEWORK_API UEquipBaseItemDataAsset : public UItemBaseDataAsset 
 {
 	GENERATED_BODY()
-\
-public:
-	virtual void Use() override;
-
-	virtual bool Equip() override;
-	virtual bool UnEquip() override;
-
 public:
 	UPROPERTY(EditAnywhere, Category = "EquipData", meta = (EditCondition = "bIsWeapon"))
 	FWeaponData WeaponData;

@@ -162,12 +162,11 @@ void UEquipmentWidget::UpdateSlot(FGameplayTag ItemTypeTag, uint8 Index, const F
     USlot* FoundSlot =  FindSlotAtSlotTagMap(ItemTypeTag, Index);
     if (FoundSlot)
     {
-        UE_LOG(LogTemp, Warning, TEXT("FindSlot , Do EquipmentWidget::UpdateSlot"));
+        UE_LOG(LogTemp, Warning, TEXT("EquipmentWidget : UpdateItemType %s, UpdateIndex %d"),*ItemTypeTag.ToString(), Index);
         FoundSlot->UpdateSlot(SlotInfo);
     }
     else
     {
-
         UE_LOG(LogTemp, Warning, TEXT("CanNot FindSlot , Do EquipmentWidget::UpdateSlot Fail"));
     }
     ItemCategoryPanel->SetVisibility(ESlateVisibility::Visible);

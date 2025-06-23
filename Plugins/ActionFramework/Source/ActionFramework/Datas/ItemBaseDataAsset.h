@@ -80,15 +80,22 @@ struct FWeaponTraceSocketName
 	GENERATED_BODY()
 
 	FWeaponTraceSocketName() :
-		TraceStartSocketName(""),
-		TraceEndSocketName("")
+		TraceHeightStartSocketName(""),
+		TraceHeightEndSocketName(""),
+		TraceWidthStartSocketName(""),
+		TraceWidthEndSocketName("")
 	{
 	}
 
 	UPROPERTY(EditAnywhere, Category = "ItemData")
-	FName TraceStartSocketName;
+	FName TraceHeightStartSocketName;
 	UPROPERTY(EditAnywhere, Category = "ItemData")
-	FName TraceEndSocketName;
+	FName TraceHeightEndSocketName;
+	UPROPERTY(EditAnywhere, Category = "ItemData")
+	FName TraceWidthStartSocketName;
+	UPROPERTY(EditAnywhere, Category = "ItemData")
+	FName TraceWidthEndSocketName;
+
 };
 
 USTRUCT()
@@ -133,8 +140,6 @@ UCLASS()
 class ACTIONFRAMEWORK_API UItemBaseDataAsset : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
-public:
-	AActor* GetSpawnedActor();
 
 public:
 	UPROPERTY(EditAnywhere, Category = "ItemData")
@@ -152,9 +157,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ItemData")
 	FGameplayTag ItemTypeTag;
 
-
 	UPROPERTY(EditAnywhere, Category = "ItemData")
 	TSubclassOf<AActor> ActorToSpawnClass;
-
-	TObjectPtr<AActor> SpawnedActor;
 };

@@ -8,6 +8,7 @@
 #include "AbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ActionFramework/Components/TargetingComponent.h"
+#include "ActionFramework/ARPGGameplayTags.h"
 #include "Curves/CurveFloat.h"
 #include "Camera/CameraComponent.h"
 
@@ -80,6 +81,7 @@ void UARPGSpringArmComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 				UE_LOG(LogTemp, Warning, TEXT("IsCameraLockedToTarget false NewCameraTarget null"));
 				bSoftlockRequiresReset = false;
+				BreakTargetLock();
 			}
 		}
 	}
@@ -163,7 +165,7 @@ void UARPGSpringArmComponent::LockToTarget(UTargetingComponent* NewTargetCompone
 			UAbilitySystemComponent* ASC = ASCI->GetAbilitySystemComponent();
 			if (ASC)
 			{
-				ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag("Event.Movement.Strafe"));
+				ASC->AddLooseGameplayTag(ARPGGameplayTags::Movement_Mode_Strafe);
 			}
 		}
 }
@@ -191,7 +193,7 @@ void UARPGSpringArmComponent::BreakTargetLock()
 			UAbilitySystemComponent* ASC = ASCI->GetAbilitySystemComponent();
 			if (ASC)
 			{
-				ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag("Event.Movement.Strafe"));
+				ASC->RemoveLooseGameplayTag(ARPGGameplayTags::Movement_Mode_Strafe);
 			}
 		}
 	}
