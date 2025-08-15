@@ -40,7 +40,10 @@
 		{
 			"Name": "ActionFramework",
 			"Enabled": true
+		},
+		{
+			"Name": "AnimationWarping",
+			"Enabled": true
 		}
-
 	]
 }
