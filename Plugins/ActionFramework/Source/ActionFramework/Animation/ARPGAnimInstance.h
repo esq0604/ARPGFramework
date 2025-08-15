@@ -14,16 +14,14 @@ class UAbilitySystemComponent;
  * 
  */
 UENUM(BlueprintType)
-namespace EAnimation
+enum class EARPGAnimationDirection : uint8
 {
-	enum Direction : int
-	{
-		Foward,
-		Backward,
-		Left,
-		Right
-	};
-}
+	Foward,
+	Backward,
+	Left,
+	Right
+};
+
 
 USTRUCT(BlueprintType)
 struct FAnimCadinalDirectionType
@@ -61,7 +59,17 @@ private:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
 	void UpdateVelocityData();
 
+	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
+	void UpdateRotationData();
 
+	UFUNCTION(BlueprintCallable, meta =(BlueprintThreadSafe))
+	void UpdateLocationData(float DeltaTime);
+
+	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
+	void UpdateAccelerationData();
+
+	UFUNCTION()
+	EARPGAnimationDirection SelectDirectionFromAngle(float Angle);
 
 	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
 	class UCharacterMovementComponent* GetMovementComponent();
@@ -74,9 +82,51 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "CharacterState")
 	bool bCrouchStateChange = false;
+
+protected:
+	UPROPERTY(BlueprintReadOnly)
+	FVector WorldVelocity;
+
+	UPROPERTY(BlueprintReadOnly)
+	FRotator WorldRotation;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector WorldLocation;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector LocalVelocity2D;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector WorldAcceleration2D;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector LocalAcceleration2D;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bHasVelocity;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bHasAcceleration;
+
+	UPROPERTY(BlueprintReadOnly)
+	float DisplacementSpeed;
+
+	UPROPERTY(BlueprintReadOnly)
+	float DisplacementSinceLastUpdate;
+
+	UPROPERTY(BlueprintReadOnly)
+	float LocalVelocityDirectionAngle;
+
+	UPROPERTY(BlueprintReadOnly)
+	float WorldVelocityDirectionAngle;
+
+	UPROPERTY(BlueprintReadOnly)
+	EARPGAnimationDirection MoveInputDirection;
+
+	bool bIsFirstUpdate=true;
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "GameplayTags")
 	FGameplayTagBlueprintPropertyMap GameplayTagPropertyMap;
-	
+
 
 };
