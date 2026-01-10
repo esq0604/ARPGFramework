@@ -10,6 +10,7 @@
 UARPGAnimInstance::UARPGAnimInstance(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
+	
 }
 
 void UARPGAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
@@ -27,7 +28,7 @@ void UARPGAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 void UARPGAnimInstance::InitializeWithAbilitySystem(UAbilitySystemComponent* ASC)
 {
 	if (ASC)
-	{
+	{   
 		GameplayTagPropertyMap.Initialize(this, ASC);
 	}
 }
@@ -67,7 +68,6 @@ void UARPGAnimInstance::UpdateVelocityData()
 
 		double Velocity = UKismetMathLibrary::VSizeXYSquared(LocalVelocity2D);
 		
-
 		LocalVelocityDirectionAngle = UKismetAnimationLibrary::CalculateDirection(WorldVelocity2D, WorldRotation);
 
 		bHasVelocity = !UKismetMathLibrary::NearlyEqual_FloatFloat(Velocity, 0);

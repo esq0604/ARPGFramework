@@ -21,7 +21,8 @@ namespace ARPGGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_Execute, "Abilities.Execute", "Execute Ability Tag");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_Executed, "Abilities.Executed", "Executed Ability Tag");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_HitReact, "Abilities.HitReact", "HitReact Ability Tag");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_Parry, "Abilities.HitReact", "Parry Ability Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_Parry, "Abilities.Parry", "Parry Ability Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Abilities_Sprint, "Abilities.Sprint", "Sprint Ability Tag");
 
 	//Effect
 	
@@ -30,7 +31,7 @@ namespace ARPGGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Death, "Status.Death", "Target has the death status.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Parry, "Status.Parry", "Target has the block state");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Block, "Status.Block", "Target has the parry state");
-
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Sprint, "Status.Sprint", "Target has the sprint state");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Attack_CanNextAttack, "Status.Attack.CanNextAttack", "Target can  combo attack");
 
 	
@@ -51,6 +52,8 @@ namespace ARPGGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Movement_Mode_Default, "Movement.Mode.Default", "Character movement mode tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Movement_Mode_Strafe, "Movement.Mode.Strafe", "Character movement mode tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Movement_Mode_Block, "Movement.Mode.Block", "Character movement mode tag ");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Movement_Mode_Sprint, "Movement.Mode.Sprint", "Character movement mode tag ");
+
 
 	//ItemType
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(ItemType_Equipment_Weapon, "ItemType.Equipment.Weapon", "Item type tag ");
@@ -62,13 +65,14 @@ namespace ARPGGameplayTags
 
 
 	//Input
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_RightClick, "Input.LightClick", "Input type tag ");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_LeftClick, "Input.RightClick", "Input type tag ");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Attack, "Input.Attack", "Input type tag ");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Block, "Input.Block", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Move, "Input.Move", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Crouch, "Input.Crouch", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Look, "Input.Look", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Esc, "Input.Esc", "Input type tag ");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Tab, "Input.Tab", "Input type tag ");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Targeting, "Input.Targeting", "Input type tag ");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_Sprint, "Input.Sprint", "Input type tag ");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Input_MouseWheelMove, "Input.MouseWheelMove", "Input type tag ");
 
 

@@ -13,6 +13,7 @@
 UARPGExecutedAbility::UARPGExecutedAbility()
 {
 	FAbilityTriggerData TrrigerData;
+	TrrigerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
 	TrrigerData.TriggerTag = ARPGGameplayTags::GameplayEvent_Executed;
 	AbilityTriggers.Add(TrrigerData);
 	AbilityTags.AddTag(ARPGGameplayTags::Abilities_Executed);

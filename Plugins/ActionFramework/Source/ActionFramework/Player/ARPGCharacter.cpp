@@ -215,14 +215,8 @@ void AARPGCharacter::InitAbilityActorInfo()
 	AbilitySystemComponent = PS->GetAbilitySystemComponent();
 	AttributeSet = PS->GetAttributeSet();
 
-
 	InitDefaultAttribute();
 	
-	//Cast<UARPGAttributeSet>(AttributeSet)->SetHealth(100.f);
-	//float health = Cast<UARPGAttributeSet>(AttributeSet)->GetHealth();
-	
-	//UE_LOG(LogTemp, Warning, TEXT("Init Health %f"), health);
-
 	if (AARPGPlayerController* ARPGController = Cast<AARPGPlayerController>(GetController()))
 	{
 		AHUD* hud = ARPGController->GetHUD();

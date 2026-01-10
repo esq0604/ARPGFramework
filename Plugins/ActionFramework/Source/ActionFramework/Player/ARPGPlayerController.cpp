@@ -79,7 +79,7 @@ void AARPGPlayerController::SetupInputComponent()
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Crouch, ETriggerEvent::Started, this, &ThisClass::Crouch, false);
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Look, ETriggerEvent::Triggered, this, &ThisClass::Look, false);
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Esc, ETriggerEvent::Started, this, &ThisClass::ToggleEscWidget, false);
-	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Tab, ETriggerEvent::Started, this, &ThisClass::TargetLock, false);
+	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_Targeting, ETriggerEvent::Started, this, &ThisClass::TargetLock, false);
 	InputComp->BindNativeAction(InputConfig, ARPGGameplayTags::Input_MouseWheelMove, ETriggerEvent::Started, this, &ThisClass::ChangeNextWeapon, false);
 }
 
@@ -93,15 +93,19 @@ void AARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 
 void AARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
-	if(GetARPGAbilitySystemComponent())
+	if (GetARPGAbilitySystemComponent())
+	{
 		GetARPGAbilitySystemComponent()->AbilityInputTagReleased(InputTag);
+	}
 }
 
 void AARPGPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
 
 	if (GetARPGAbilitySystemComponent())
+	{
 		GetARPGAbilitySystemComponent()->AbilityInputTagHeld(InputTag);
+	}
 }
 
 void AARPGPlayerController::Move(const FInputActionValue& Value)

@@ -78,10 +78,10 @@ public:
 	FVector LookAtLocation;
 
 	UPROPERTY(BlueprintReadWrite , Category = "CharacterState")
-	bool bIsCrouch = false;	
+	bool bIsCrouch;
 
 	UPROPERTY(BlueprintReadWrite, Category = "CharacterState")
-	bool bCrouchStateChange = false;
+	bool bCrouchStateChange;
 
 protected:
 	UPROPERTY(BlueprintReadOnly)

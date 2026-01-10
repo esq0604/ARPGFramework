@@ -10,10 +10,10 @@ void UARPGAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf
 	for (TSubclassOf<UGameplayAbility> AbilityClass : StartupAbilties)
 	{
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
-		GiveAbility(AbilitySpec);
 		if (const UARPGAbility* ARPGAbility = Cast<UARPGAbility>(AbilitySpec.Ability))
 		{
-			AbilitySpec.DynamicAbilityTags.AddTag(ARPGAbility->StartupInputTag);
+			AbilitySpec.GetDynamicSpecSourceTags().AddTag(ARPGAbility->StartupInputTag);
+			//AbilitySpec.DynamicAbilityTags.AddTag(ARPGAbility->StartupInputTag);
 			GiveAbility(AbilitySpec);
 		}
 	}
@@ -61,7 +61,7 @@ void UARPGAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inp
 	FScopedAbilityListLock ActiveScopeLoc(*this);
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
-		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
+		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 		{
 			AbilitySpecInputPressed(AbilitySpec);
 		}
@@ -74,7 +74,7 @@ void UARPGAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputT
 	FScopedAbilityListLock ActiveScopeLoc(*this);
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
-		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
+		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 		{
 			AbilitySpecInputPressed(AbilitySpec);
 			if (!AbilitySpec.IsActive())
@@ -92,7 +92,7 @@ void UARPGAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& In
 		FScopedAbilityListLock ActiveScopeLoc(*this);
 		for (FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
 		{
-			if (AbilitySpec.Ability && (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag)))
+			if (AbilitySpec.Ability && (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag)))
 			{
 				AbilitySpecInputReleased(AbilitySpec);
 			}
